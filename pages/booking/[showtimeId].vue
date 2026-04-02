@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MOCK_SEATS, MOCK_SHOWTIMES } from '~/constants/mock-data'
+import { MOCK_SEATS, MOCK_SHOWTIMES } from '~/mocks'
 import { useBookingStore } from '~/stores/booking'
 
 definePageMeta({

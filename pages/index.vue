@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MOCK_MOVIES } from '~/constants/mock-data'
+import { MOCK_MOVIES } from '~/mocks'
 
 const featuredMovies = MOCK_MOVIES.slice(0, 3)
 </script>
