@@ -14,10 +14,13 @@
 
   html {
     @apply scroll-smooth;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-background font-sans text-base text-foreground antialiased;
+    min-height: 100vh;
     background-image:
       radial-gradient(
         circle at top left,
@@ -25,6 +28,12 @@
         transparent 28%
       ),
       linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 1));
+  }
+
+  body::after {
+    content: '';
+    display: block;
+    height: 1px;
   }
 
   h1,
