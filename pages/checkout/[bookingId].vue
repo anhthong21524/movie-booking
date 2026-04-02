@@ -7,13 +7,14 @@ definePageMeta({
 })
 
 const bookingStore = useBookingStore()
+const { locale, t } = useI18n()
 </script>
 
 <template>
   <div class="space-y-8">
     <PageHero
-      title="Checkout"
-      description="Minimal state-driven checkout placeholder backed by the booking Pinia store."
+      :title="t('checkoutPage.heroTitle')"
+      :description="t('checkoutPage.heroDescription')"
     />
 
     <section
@@ -21,7 +22,9 @@ const bookingStore = useBookingStore()
       class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"
     >
       <div class="card p-6">
-        <h2 class="text-2xl font-bold">Selected seats</h2>
+        <h2 class="text-2xl font-bold">
+          {{ t('checkoutPage.selectedSeats') }}
+        </h2>
         <div class="mt-5 flex flex-wrap gap-3">
           <span
             v-for="seat in bookingStore.booking.seats"
@@ -34,11 +37,13 @@ const bookingStore = useBookingStore()
       </div>
 
       <aside class="card p-6">
-        <h2 class="text-xl font-bold">Payment summary</h2>
+        <h2 class="text-xl font-bold">
+          {{ t('checkoutPage.paymentSummary') }}
+        </h2>
         <div class="mt-5 flex items-center justify-between gap-3">
-          <span class="text-slate-500">Total</span>
+          <span class="text-slate-500">{{ t('checkoutPage.total') }}</span>
           <span class="text-2xl font-bold">{{
-            formatCurrency(bookingStore.totalAmount)
+            formatCurrency(bookingStore.totalAmount, 'USD', locale)
           }}</span>
         </div>
       </aside>
@@ -46,9 +51,9 @@ const bookingStore = useBookingStore()
 
     <EmptyState
       v-else
-      title="No booking in progress"
-      description="Start from a showtime and select seats to populate checkout state."
-      action-label="Go to movies"
+      :title="t('checkoutPage.noBookingTitle')"
+      :description="t('checkoutPage.noBookingDescription')"
+      :action-label="t('checkoutPage.goToMovies')"
       action-to="/movies"
     />
   </div>

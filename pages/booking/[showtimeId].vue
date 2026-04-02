@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MOCK_SEATS, MOCK_SHOWTIMES } from '~/mocks'
+import { MOCK_SEATS } from '~/mocks'
 import { useBookingStore } from '~/stores/booking'
 
 definePageMeta({
@@ -8,14 +8,17 @@ definePageMeta({
 
 const route = useRoute()
 const bookingStore = useBookingStore()
+const { t } = useI18n()
+const { localizedShowtimes } = useCatalog()
+
 const showtime = computed(() =>
-  MOCK_SHOWTIMES.find((item) => item.id === route.params.showtimeId),
+  localizedShowtimes.value.find((item) => item.id === route.params.showtimeId),
 )
 
 if (!showtime.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: 'Showtime not found',
+    statusMessage: t('bookingPage.showtimeNotFound'),
   })
 }
 
@@ -35,8 +38,8 @@ const handleSeatSelection = () => {
 <template>
   <div v-if="showtime" class="space-y-8">
     <PageHero
-      title="Select your seats"
-      description="Route middleware is wired here as an auth stub. The page also demonstrates how booking state can be initialized in Pinia."
+      :title="t('bookingPage.heroTitle')"
+      :description="t('bookingPage.heroDescription')"
     />
 
     <section class="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
@@ -44,7 +47,7 @@ const handleSeatSelection = () => {
         <div
           class="mb-6 rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.3em] text-white/80"
         >
-          Screen
+          {{ t('bookingPage.screen') }}
         </div>
         <div class="grid grid-cols-4 gap-3 sm:grid-cols-6">
           <div
@@ -63,19 +66,21 @@ const handleSeatSelection = () => {
       </div>
 
       <aside class="card p-6">
-        <h2 class="text-xl font-bold">Booking summary</h2>
+        <h2 class="text-xl font-bold">{{ t('bookingPage.summaryTitle') }}</h2>
         <dl class="mt-5 space-y-4 text-sm">
           <div class="flex items-center justify-between gap-3">
-            <dt class="text-slate-500">Showtime</dt>
+            <dt class="text-slate-500">{{ t('bookingPage.showtime') }}</dt>
             <dd class="font-semibold">{{ showtime.roomName }}</dd>
           </div>
           <div class="flex items-center justify-between gap-3">
-            <dt class="text-slate-500">Selectable seats</dt>
+            <dt class="text-slate-500">
+              {{ t('bookingPage.selectableSeats') }}
+            </dt>
             <dd class="font-semibold">{{ selectableSeats.length }}</dd>
           </div>
         </dl>
         <button class="btn-primary mt-6 w-full" @click="handleSeatSelection">
-          Continue to checkout
+          {{ t('bookingPage.continueToCheckout') }}
         </button>
       </aside>
     </section>

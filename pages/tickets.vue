@@ -1,13 +1,17 @@
+<script setup lang="ts">
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="space-y-8">
     <PageHero
-      title="Your tickets"
-      description="Ready for authenticated ticket history, QR codes, and booking lookup."
+      :title="t('ticketsPage.heroTitle')"
+      :description="t('ticketsPage.heroDescription')"
     />
     <EmptyState
-      title="No tickets yet"
-      description="Purchased tickets will appear here once your booking and payment flows are connected."
-      action-label="Browse movies"
+      :title="t('ticketsPage.emptyTitle')"
+      :description="t('ticketsPage.emptyDescription')"
+      :action-label="t('ticketsPage.action')"
       action-to="/movies"
     />
   </div>
