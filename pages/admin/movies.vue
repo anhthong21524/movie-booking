@@ -1,12 +1,16 @@
+<script setup lang="ts">
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="space-y-8">
     <PageHero
-      title="Admin: Movies"
-      description="Use this route for CRUD screens, server tables, and content workflows for movie records."
+      :title="t('adminMoviesPage.heroTitle')"
+      :description="t('adminMoviesPage.heroDescription')"
     />
     <EmptyState
-      title="Movie admin is not implemented"
-      description="The route exists and is ready for forms, validation, and API-backed management screens."
+      :title="t('adminMoviesPage.emptyTitle')"
+      :description="t('adminMoviesPage.emptyDescription')"
     />
   </div>
 </template>

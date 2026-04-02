@@ -4,6 +4,8 @@ import type { Movie } from '~/types'
 defineProps<{
   movie: Movie
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -16,7 +18,8 @@ defineProps<{
         <div>
           <h3 class="text-xl font-bold">{{ movie.title }}</h3>
           <p class="mt-1 text-sm text-slate-500">
-            {{ movie.genre }} • {{ movie.durationMinutes }} mins
+            {{ movie.genre }} &middot; {{ movie.durationMinutes }}
+            {{ t('common.minutesShort') }}
           </p>
         </div>
         <span
@@ -27,7 +30,7 @@ defineProps<{
       </div>
       <p class="line-clamp-3 text-sm text-slate-600">{{ movie.description }}</p>
       <NuxtLink :to="`/movies/${movie.id}`" class="btn-secondary w-full">
-        View details
+        {{ t('common.viewDetails') }}
       </NuxtLink>
     </div>
   </article>

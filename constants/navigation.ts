@@ -1,6 +1,6 @@
 export const MAIN_NAVIGATION = [
-  { label: 'Movies', to: '/movies' },
-  { label: 'Tickets', to: '/tickets' },
-  { label: 'Admin Movies', to: '/admin/movies' },
-  { label: 'Admin Showtimes', to: '/admin/showtimes' },
+  { key: 'movies', to: '/movies' },
+  { key: 'tickets', to: '/tickets' },
+  { key: 'adminMovies', to: '/admin/movies' },
+  { key: 'adminShowtimes', to: '/admin/showtimes' },
 ]

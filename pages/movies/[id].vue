@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from '~/mocks'
 import { formatCurrency, formatDateTime } from '~/utils/format'
 
 const route = useRoute()
+const { locale, t } = useI18n()
+const { localizedMovies, localizedShowtimes } = useCatalog()
+
 const movie = computed(() =>
-  MOCK_MOVIES.find((item) => item.id === route.params.id),
+  localizedMovies.value.find((item) => item.id === route.params.id),
 )
 const showtimes = computed(() =>
-  MOCK_SHOWTIMES.filter((showtime) => showtime.movieId === route.params.id),
+  localizedShowtimes.value.filter(
+    (showtime) => showtime.movieId === route.params.id,
+  ),
 )
 
 if (!movie.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: 'Movie not found',
+    statusMessage: t('moviesPage.movieNotFound'),
   })
 }
 </script>
@@ -35,19 +39,21 @@ if (!movie.value) {
         </div>
         <div class="space-y-4 p-8">
           <div class="rounded-2xl bg-slate-50 p-4">
-            <p class="text-sm text-slate-500">Duration</p>
+            <p class="text-sm text-slate-500">{{ t('moviesPage.duration') }}</p>
             <p class="mt-1 text-lg font-semibold">
-              {{ movie.durationMinutes }} minutes
+              {{ movie.durationMinutes }} {{ t('common.minutesLong') }}
             </p>
           </div>
           <div class="rounded-2xl bg-slate-50 p-4">
-            <p class="text-sm text-slate-500">Ticket price</p>
+            <p class="text-sm text-slate-500">
+              {{ t('moviesPage.ticketPrice') }}
+            </p>
             <p class="mt-1 text-lg font-semibold">
-              {{ formatCurrency(movie.basePrice) }}
+              {{ formatCurrency(movie.basePrice, 'USD', locale) }}
             </p>
           </div>
           <div class="rounded-2xl bg-slate-50 p-4">
-            <p class="text-sm text-slate-500">Rating</p>
+            <p class="text-sm text-slate-500">{{ t('moviesPage.rating') }}</p>
             <p class="mt-1 text-lg font-semibold">{{ movie.rating }}</p>
           </div>
         </div>
@@ -56,8 +62,10 @@ if (!movie.value) {
 
     <section class="space-y-4">
       <div>
-        <h2 class="text-2xl font-bold">Available showtimes</h2>
-        <p class="mt-1 text-slate-600">Static examples for the booking flow.</p>
+        <h2 class="text-2xl font-bold">{{ t('moviesPage.showtimesTitle') }}</h2>
+        <p class="mt-1 text-slate-600">
+          {{ t('moviesPage.showtimesDescription') }}
+        </p>
       </div>
 
       <div
@@ -71,24 +79,25 @@ if (!movie.value) {
         >
           <p class="text-sm text-slate-500">{{ showtime.roomName }}</p>
           <h3 class="mt-2 text-lg font-semibold">
-            {{ formatDateTime(showtime.startsAt) }}
+            {{ formatDateTime(showtime.startsAt, locale) }}
           </h3>
           <p class="mt-2 text-sm text-slate-600">
-            Starts from {{ formatCurrency(showtime.price) }}
+            {{ t('moviesPage.startsFrom') }}
+            {{ formatCurrency(showtime.price, 'USD', locale) }}
           </p>
           <NuxtLink
             :to="`/booking/${showtime.id}`"
             class="btn-primary mt-5 w-full"
           >
-            Select seats
+            {{ t('moviesPage.selectSeats') }}
           </NuxtLink>
         </article>
       </div>
 
       <EmptyState
         v-else
-        title="No showtimes yet"
-        description="Add showtimes from the admin section or connect the route to your backend."
+        :title="t('moviesPage.noShowtimesTitle')"
+        :description="t('moviesPage.noShowtimesDescription')"
       />
     </section>
   </div>

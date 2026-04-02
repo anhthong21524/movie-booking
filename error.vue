@@ -5,6 +5,8 @@ defineProps<{
   error: NuxtError
 }>()
 
+const { t } = useI18n()
+
 const handleError = () => clearError({ redirect: '/' })
 </script>
 
@@ -16,15 +18,17 @@ const handleError = () => clearError({ redirect: '/' })
       <p
         class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600"
       >
-        Something went wrong
+        {{ t('errors.genericTitle') }}
       </p>
       <h1 class="mt-4 text-4xl font-bold">
         {{ error.statusCode || 500 }}
       </h1>
       <p class="mt-4 text-lg text-slate-600">
-        {{ error.statusMessage || 'An unexpected application error occurred.' }}
+        {{ error.statusMessage || t('errors.genericDescription') }}
       </p>
-      <button class="btn-primary mt-8" @click="handleError">Return home</button>
+      <button class="btn-primary mt-8" @click="handleError">
+        {{ t('errors.returnHome') }}
+      </button>
     </div>
   </div>
 </template>

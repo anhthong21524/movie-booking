@@ -3,6 +3,8 @@ defineProps<{
   title: string
   description: string
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -12,14 +14,14 @@ defineProps<{
     <div
       class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary-50 to-transparent"
     />
-    <div class="relative max-w-3xl">
+    <div class="relative max-w-4xl">
       <p
         class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600"
       >
-        Movie booking platform
+        {{ t('common.platformBadge') }}
       </p>
       <h1 class="section-heading mt-4">{{ title }}</h1>
-      <p class="mt-4 max-w-2xl text-lg text-slate-600">
+      <p class="mt-4 max-w-3xl text-lg text-slate-600">
         {{ description }}
       </p>
     </div>
