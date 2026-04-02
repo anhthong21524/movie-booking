@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from '~/constants/mock-data'
+import { MOCK_MOVIES, MOCK_SHOWTIMES } from '~/mocks'
 import { formatCurrency, formatDateTime } from '~/utils/format'
 
 const route = useRoute()
