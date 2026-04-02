@@ -1,6 +1,6 @@
 # Movie Booking Nuxt App
 
-Starter project cho hệ thống đặt vé xem phim, được xây dựng với Nuxt 3 theo hướng đơn giản, rõ ràng và dễ mở rộng.
+A clean starter project for a movie ticket booking application built with Nuxt 3, designed to be simple, maintainable, and easy to extend.
 
 ## Tech Stack
 
@@ -11,14 +11,14 @@ Starter project cho hệ thống đặt vé xem phim, được xây dựng với
 - ESLint
 - Prettier
 
-## Mục tiêu
+## Goals
 
-- Cung cấp nền tảng sạch để phát triển ứng dụng booking phim
-- Có sẵn routing cơ bản cho user flow và admin flow
-- Có sẵn cấu trúc thư mục rõ ràng để mở rộng theo module
-- Có API wrapper, middleware auth stub, state tối thiểu và type cơ bản
+- Provide a solid foundation for building a movie booking application
+- Include ready-to-use routes for both user flow and admin flow
+- Keep the project structure clear and scalable
+- Include a base API wrapper, auth middleware stub, minimal state, and core domain types
 
-## Cấu trúc thư mục
+## Project Structure
 
 ```text
 .
@@ -39,7 +39,7 @@ Starter project cho hệ thống đặt vé xem phim, được xây dựng với
 |-- tailwind.config.ts
 ```
 
-## Các route đã có
+## Available Routes
 
 - `/`
 - `/movies`
@@ -50,21 +50,21 @@ Starter project cho hệ thống đặt vé xem phim, được xây dựng với
 - `/admin/movies`
 - `/admin/showtimes`
 
-## Chạy dự án
+## Run the Project
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build production
+## Production Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Kiểm tra chất lượng
+## Quality Checks
 
 ```bash
 npm run lint
@@ -73,42 +73,42 @@ npm run typecheck
 
 ## Environment Variables
 
-Tạo file `.env` từ `.env.example` nếu cần.
+Create a `.env` file from `.env.example` if needed.
 
 ```env
 NUXT_PUBLIC_API_BASE_URL=https://api.example.com
 ```
 
-Biến này được dùng trong runtime config để làm base URL cho API calls.
+This variable is used in Nuxt runtime config as the base URL for API calls.
 
-## Những gì đã được setup
+## Included Setup
 
 - TypeScript strict mode
-- Tailwind CSS với design system cơ bản
-- Pinia store cho `user` và `booking`
-- Default layout với header và footer
+- Tailwind CSS with a basic design system
+- Pinia stores for `user` and `booking`
+- Default layout with header and footer
 - Global loading indicator
 - Error page
 - Empty state component
 - Base API service
 - Global API error normalization
-- Route middleware auth dạng stub
-- Mock data để hiển thị giao diện ngay từ đầu
+- Auth route middleware stub
+- Mock data so the UI can render immediately
 
-## File quan trọng
+## Important Files
 
-- `nuxt.config.ts`: cấu hình Nuxt, module, runtime config
-- `services/api.ts`: fetch wrapper cho API
-- `stores/user.ts`: state người dùng
-- `stores/booking.ts`: state booking
-- `types/index.ts`: các interface chính của domain
-- `assets/css/main.css`: style global và utility class
-- `tailwind.config.ts`: theme màu sắc, spacing, typography
+- `nuxt.config.ts`: Nuxt configuration, modules, and runtime config
+- `services/api.ts`: fetch wrapper for API requests
+- `stores/user.ts`: user state
+- `stores/booking.ts`: booking state
+- `types/index.ts`: core domain interfaces
+- `assets/css/main.css`: global styles and shared utility classes
+- `tailwind.config.ts`: theme tokens for colors, spacing, and typography
 
-## Gợi ý bước tiếp theo
+## Suggested Next Steps
 
-- Kết nối backend thật cho movies, showtimes, bookings
-- Thêm authentication và authorization đầy đủ
-- Thay mock data bằng API data
-- Bổ sung form validation
-- Thêm test cho store, service và page flow quan trọng
+- Connect a real backend for movies, showtimes, and bookings
+- Add full authentication and authorization
+- Replace mock data with API-driven data
+- Add form validation
+- Add tests for stores, services, and critical page flows
