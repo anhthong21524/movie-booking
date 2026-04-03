@@ -5,7 +5,7 @@ defineProps<{
   error: NuxtError
 }>()
 
-const { t } = useI18n()
+const { t } = useAppLocale()
 
 const handleError = () => clearError({ redirect: '/' })
 </script>
