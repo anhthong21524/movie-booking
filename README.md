@@ -71,6 +71,11 @@ npm run lint
 npm run typecheck
 ```
 
+## Development Workflow
+
+Branching, pull request rules, and release flow are documented in
+[`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
 ## Environment Variables
 
 Create a `.env` file from `.env.example` if needed.
