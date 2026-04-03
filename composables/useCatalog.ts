@@ -1,8 +1,8 @@
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from '~/mocks'
+import { MOCK_MOVIES, MOCK_SEATS, MOCK_SHOWTIMES } from '~/mocks'
 import type { Movie, Showtime } from '~/types'
 
 export const useCatalog = () => {
-  const { tm } = useI18n()
+  const { tm } = useAppLocale()
 
   const localizeMovie = (movie: Movie): Movie => {
     const localized = tm<
@@ -32,10 +32,12 @@ export const useCatalog = () => {
   const localizedShowtimes = computed(() =>
     MOCK_SHOWTIMES.map(localizeShowtime),
   )
+  const seats = computed(() => MOCK_SEATS)
 
   return {
     localizedMovies,
     localizedShowtimes,
+    seats,
     localizeMovie,
     localizeShowtime,
   }

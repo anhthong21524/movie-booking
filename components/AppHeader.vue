@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MAIN_NAVIGATION } from '~/constants/navigation'
 
-const { locale, setLocale, t } = useI18n()
+const { locale, setLocale, t } = useAppLocale()
 
 const navigation = computed(() =>
   MAIN_NAVIGATION.map((item) => ({

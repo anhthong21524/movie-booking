@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { t } = useI18n()
+definePageMeta({ layout: 'admin' })
+
+const { t } = useAppLocale()
 </script>
 
 <template>

@@ -2,7 +2,7 @@
 import { formatCurrency, formatDateTime } from '~/utils/format'
 
 const route = useRoute()
-const { locale, t } = useI18n()
+const { locale, t } = useAppLocale()
 const { localizedMovies, localizedShowtimes } = useCatalog()
 
 const movie = computed(() =>

@@ -5,7 +5,7 @@ defineProps<{
   movie: Movie
 }>()
 
-const { t } = useI18n()
+const { t } = useAppLocale()
 </script>
 
 <template>

@@ -1,15 +1,18 @@
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
-  messages,
   type AppLocale,
 } from '~/constants/i18n'
+import { en } from '~/locales/en'
+import { vi } from '~/locales/vi'
 
 interface MessageObject {
   [key: string]: MessageNode
 }
 
 type MessageNode = string | MessageObject
+
+const messages = { en, vi }
 
 const resolveMessage = (
   source: MessageNode,
@@ -24,7 +27,7 @@ const resolveMessage = (
   }, source)
 }
 
-export const useI18n = () => {
+export const useAppLocale = () => {
   const localeCookie = useCookie<AppLocale>('moviehub-locale', {
     default: () => DEFAULT_LOCALE,
   })

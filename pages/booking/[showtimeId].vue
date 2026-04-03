@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { MOCK_SEATS } from '~/mocks'
 import { useBookingStore } from '~/stores/booking'
 
 definePageMeta({
@@ -8,8 +7,8 @@ definePageMeta({
 
 const route = useRoute()
 const bookingStore = useBookingStore()
-const { t } = useI18n()
-const { localizedShowtimes } = useCatalog()
+const { t } = useAppLocale()
+const { localizedShowtimes, seats } = useCatalog()
 
 const showtime = computed(() =>
   localizedShowtimes.value.find((item) => item.id === route.params.showtimeId),
@@ -23,7 +22,7 @@ if (!showtime.value) {
 }
 
 const selectableSeats = computed(() =>
-  MOCK_SEATS.filter((seat) => seat.status === 'AVAILABLE'),
+  seats.value.filter((seat) => seat.status === 'AVAILABLE'),
 )
 
 const handleSeatSelection = () => {
@@ -51,7 +50,7 @@ const handleSeatSelection = () => {
         </div>
         <div class="grid grid-cols-4 gap-3 sm:grid-cols-6">
           <div
-            v-for="seat in MOCK_SEATS"
+            v-for="seat in seats"
             :key="seat.id"
             class="rounded-xl px-3 py-4 text-center text-sm font-semibold"
             :class="{

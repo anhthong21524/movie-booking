@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { t } = useI18n()
+const { t } = useAppLocale()
 const { localizedMovies } = useCatalog()
 
 const featuredMovies = computed(() => localizedMovies.value.slice(0, 3))

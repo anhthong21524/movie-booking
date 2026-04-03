@@ -7,7 +7,7 @@ definePageMeta({
 })
 
 const bookingStore = useBookingStore()
-const { locale, t } = useI18n()
+const { locale, t } = useAppLocale()
 </script>
 
 <template>

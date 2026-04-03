@@ -4,7 +4,7 @@ defineProps<{
   description: string
 }>()
 
-const { t } = useI18n()
+const { t } = useAppLocale()
 </script>
 
 <template>
