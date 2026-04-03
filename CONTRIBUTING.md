@@ -2,6 +2,8 @@
 
 This project uses a simple Git flow designed to keep `main` stable for production while allowing feature work to move independently.
 
+The repository now uses `develop` as the active integration branch.
+
 ## Branch Strategy
 
 - `main`: production branch
@@ -43,6 +45,7 @@ Examples:
 - `develop` -> `main` only when preparing a release
 
 Do not merge feature branches directly into `main`.
+Do not merge `fix/*` or `chore/*` branches directly into `main`.
 
 ## Release Flow
 
@@ -54,6 +57,12 @@ When multiple completed features are ready to go live:
 4. Vercel deploys production from `main`
 
 This makes `main` the release branch and `develop` the integration branch.
+
+## Current Branch Roles
+
+- `main` is reserved for production-ready releases only
+- `develop` is the branch where completed work is integrated before release
+- all day-to-day work should branch from `develop`
 
 ## Commit Message Style
 
