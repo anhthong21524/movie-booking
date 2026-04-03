@@ -50,6 +50,22 @@ A clean starter project for a movie ticket booking application built with Nuxt 3
 - `/admin/movies`
 - `/admin/showtimes`
 
+## Current Features
+
+- Public movie listing page
+- Movie detail page with available showtimes
+- Seat selection flow for booking
+- Checkout summary page backed by Pinia booking state
+- Tickets page placeholder for authenticated users
+- Admin placeholders for movies and showtimes
+- English and Vietnamese language switcher
+- Vietnamese as the default locale for first-time visitors
+- Persistent locale selection using cookies
+- Responsive layout with shared header and footer
+- Global loading indicator and custom error page
+- Scrollbar-stable layout to reduce route-change layout shift
+- Vercel-ready deployment setup with connected Git workflow
+
 ## Run the Project
 
 ```bash
