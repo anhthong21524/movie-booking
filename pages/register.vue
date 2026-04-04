@@ -9,9 +9,12 @@ import {
 } from '~/constants/auth'
 import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 import type { RegisterRequestBody, RegisterResponse } from '~/types/auth'
+import type { AppError } from '~/types/app-error'
 
 const route = useRoute()
 const { locale } = useI18n()
+const { requestLocal } = useApi()
+const { normalize, getMessage, isRetryable } = useApiError()
 
 useSeoMeta({
   title: 'Register',
@@ -25,7 +28,7 @@ const form = reactive<RegisterRequestBody>({
 })
 
 const validationMessage = ref('')
-const serverErrorMessage = ref('')
+const actionError = ref<AppError | null>(null)
 const isSubmitting = ref(false)
 
 const copy = computed(() => {
@@ -114,7 +117,7 @@ const validateForm = () => {
 
 const handleRegister = async () => {
   validationMessage.value = ''
-  serverErrorMessage.value = ''
+  actionError.value = null
 
   const validationError = validateForm()
 
@@ -126,7 +129,7 @@ const handleRegister = async () => {
   isSubmitting.value = true
 
   try {
-    await $fetch<RegisterResponse>('/api/auth/register', {
+    await requestLocal<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: {
         name: form.name.trim(),
@@ -134,6 +137,7 @@ const handleRegister = async () => {
         password: form.password,
         confirmPassword: form.confirmPassword,
       },
+      timeoutMs: 10000,
     })
 
     const query =
@@ -149,16 +153,40 @@ const handleRegister = async () => {
       query,
     })
   } catch (error) {
-    serverErrorMessage.value =
-      error instanceof Error && 'data' in error
-        ? String(
-            (error as { data?: { statusMessage?: string } }).data?.statusMessage ??
-              copy.value.genericError,
-          )
-        : copy.value.genericError
+    actionError.value = normalize(error)
   } finally {
     isSubmitting.value = false
   }
+}
+
+const actionErrorMessage = computed(() => {
+  return actionError.value ? getMessage(actionError.value, 'action') : null
+})
+
+const actionErrorDescription = computed(() => {
+  if (!actionError.value || !actionErrorMessage.value) {
+    return ''
+  }
+
+  if (actionError.value.category !== 'validation' || !actionError.value.validation) {
+    return actionErrorMessage.value.description
+  }
+
+  const validationMessages = Object.values(actionError.value.validation)
+    .flat()
+    .filter(Boolean)
+
+  return validationMessages.length
+    ? validationMessages.join(' ')
+    : actionErrorMessage.value.description
+})
+
+const retryRegister = async () => {
+  if (!actionError.value || !isRetryable(actionError.value) || isSubmitting.value) {
+    return
+  }
+
+  await handleRegister()
 }
 </script>
 
@@ -188,12 +216,17 @@ const handleRegister = async () => {
             {{ validationMessage }}
           </div>
 
-          <div
-            v-if="serverErrorMessage"
-            class="mt-4 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700"
-          >
-            {{ serverErrorMessage }}
-          </div>
+          <ActionErrorMessage
+            v-if="actionError && actionErrorMessage"
+            class="mt-4"
+            :title="actionErrorMessage.title"
+            :description="actionErrorDescription"
+            :retryable="actionError.retryable"
+            :retry-pending="isSubmitting"
+            :retry-disabled="isSubmitting"
+            :retry-label="actionErrorMessage.retryLabel"
+            @retry="retryRegister"
+          />
 
           <form class="mt-6 space-y-5" @submit.prevent="handleRegister">
             <label class="block space-y-2">
