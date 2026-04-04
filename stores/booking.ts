@@ -1,6 +1,26 @@
 import type { Booking, Seat } from '~/types'
+import type { RawTicketBookingDto } from '~/types/tickets'
 
 const BOOKING_STORAGE_KEY = 'movie-booking:draft'
+const BOOKING_HISTORY_STORAGE_KEY = 'movie-booking:history'
+
+const isSeatRecord = (value: unknown): value is Seat => {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const seat = value as Partial<Seat>
+
+  return (
+    typeof seat.id === 'string' &&
+    typeof seat.label === 'string' &&
+    typeof seat.row === 'string' &&
+    typeof seat.number === 'number' &&
+    (seat.status === 'AVAILABLE' ||
+      seat.status === 'HELD' ||
+      seat.status === 'BOOKED')
+  )
+}
 
 const parseStoredBooking = (value: string | null) => {
   if (!value) {
@@ -23,14 +43,42 @@ const parseStoredBooking = (value: string | null) => {
       return null
     }
 
+    if (
+      !parsed.seatIds.every((seatId) => typeof seatId === 'string') ||
+      !parsed.seats.every(isSeatRecord)
+    ) {
+      return null
+    }
+
     return parsed as Booking
   } catch {
     return null
   }
 }
 
+const parseStoredBookingHistory = (value: string | null) => {
+  if (!value) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(value) as RawTicketBookingDto[]
+
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed
+      .map((item) => parseStoredBooking(JSON.stringify(item)))
+      .filter((item): item is Booking => Boolean(item))
+  } catch {
+    return []
+  }
+}
+
 export const useBookingStore = defineStore('booking', () => {
   const booking = ref<Booking | null>(null)
+  const bookingHistory = ref<Booking[]>([])
   const hasHydrated = ref(false)
 
   const totalAmount = computed(() => booking.value?.totalAmount ?? 0)
@@ -48,12 +96,31 @@ export const useBookingStore = defineStore('booking', () => {
     window.localStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(booking.value))
   }
 
+  const persistBookingHistory = () => {
+    if (!import.meta.client) {
+      return
+    }
+
+    if (!bookingHistory.value.length) {
+      window.localStorage.removeItem(BOOKING_HISTORY_STORAGE_KEY)
+      return
+    }
+
+    window.localStorage.setItem(
+      BOOKING_HISTORY_STORAGE_KEY,
+      JSON.stringify(bookingHistory.value),
+    )
+  }
+
   const hydrateBooking = () => {
     if (!import.meta.client || hasHydrated.value) {
       return
     }
 
     booking.value = parseStoredBooking(window.localStorage.getItem(BOOKING_STORAGE_KEY))
+    bookingHistory.value = parseStoredBookingHistory(
+      window.localStorage.getItem(BOOKING_HISTORY_STORAGE_KEY),
+    )
     hasHydrated.value = true
   }
 
@@ -72,6 +139,14 @@ export const useBookingStore = defineStore('booking', () => {
     booking.value = nextBooking
     persistBooking()
     return booking.value
+  }
+
+  const upsertHistoryBooking = (nextBooking: Booking) => {
+    bookingHistory.value = [
+      nextBooking,
+      ...bookingHistory.value.filter((item) => item.id !== nextBooking.id),
+    ]
+    persistBookingHistory()
   }
 
   const startBooking = (showtimeId: string, seats: Seat[], unitPrice: number) => {
@@ -97,15 +172,20 @@ export const useBookingStore = defineStore('booking', () => {
       return null
     }
 
-    return replaceBooking({
+    const confirmedBooking = {
       ...booking.value,
       seatIds: payload.seatIds,
       seats: payload.seats,
       unitPrice: payload.unitPrice,
       totalAmount: payload.totalAmount,
-      status: 'CONFIRMED',
+      status: 'CONFIRMED' as const,
       confirmedAt: new Date().toISOString(),
-    })
+    }
+
+    replaceBooking(confirmedBooking)
+    upsertHistoryBooking(confirmedBooking)
+
+    return booking.value
   }
 
   const clearBooking = () => {
@@ -123,10 +203,19 @@ export const useBookingStore = defineStore('booking', () => {
       },
       { deep: true },
     )
+
+    watch(
+      bookingHistory,
+      () => {
+        persistBookingHistory()
+      },
+      { deep: true },
+    )
   }
 
   return {
     booking,
+    bookingHistory,
     hasHydrated,
     totalAmount,
     hydrateBooking,
