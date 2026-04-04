@@ -5,3 +5,7 @@ export const buildMovieDetailRoute = (movieId: string) => {
 export const buildBookingRoute = (showtimeId: string) => {
   return `/booking/${encodeURIComponent(showtimeId)}`
 }
+
+export const buildCheckoutRoute = (bookingId: string) => {
+  return `/checkout/${encodeURIComponent(bookingId)}`
+}
