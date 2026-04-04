@@ -2,6 +2,7 @@ import {
   ADMIN_PATH_PREFIXES,
   AUTH_ONLY_PATH_PREFIXES,
   AUTH_ONLY_PATHS,
+  DEFAULT_AUTH_REDIRECT,
   DEFAULT_PUBLIC_REDIRECT,
   GUEST_ONLY_PATHS,
   LOGIN_PATH,
@@ -9,6 +10,12 @@ import {
 } from '~/constants/auth'
 
 export type AppRouteAccess = 'public' | 'auth' | 'admin' | 'guest'
+export interface RouteAccessContext {
+  access: AppRouteAccess
+  fullPath: string
+  isAuthenticated: boolean
+  isAdmin: boolean
+}
 
 const hasPathMatch = (path: string, candidate: string) => {
   return path === candidate || path.startsWith(`${candidate}/`)
@@ -63,4 +70,56 @@ export const buildLoginRedirectLocation = (target: string) => {
       [REDIRECT_QUERY_KEY]: sanitizeRedirectTarget(target),
     },
   }
+}
+
+export const buildLoginRedirectPath = (target: string) => {
+  const redirectTarget = sanitizeRedirectTarget(target)
+
+  if (redirectTarget === DEFAULT_PUBLIC_REDIRECT) {
+    return LOGIN_PATH
+  }
+
+  const searchParams = new URLSearchParams({
+    [REDIRECT_QUERY_KEY]: redirectTarget,
+  })
+
+  return `${LOGIN_PATH}?${searchParams.toString()}`
+}
+
+export const resolveRouteRedirect = ({
+  access,
+  fullPath,
+  isAuthenticated,
+  isAdmin,
+}: RouteAccessContext) => {
+  if (access === 'public') {
+    return null
+  }
+
+  if (access === 'guest') {
+    return isAuthenticated ? DEFAULT_AUTH_REDIRECT : null
+  }
+
+  if (!isAuthenticated) {
+    return buildLoginRedirectPath(fullPath)
+  }
+
+  if (access === 'admin' && !isAdmin) {
+    return DEFAULT_AUTH_REDIRECT
+  }
+
+  return null
+}
+
+export const shouldSkipServerRouteProtection = (path: string) => {
+  if (
+    path.startsWith('/api/') ||
+    path.startsWith('/_nuxt/') ||
+    path.startsWith('/__nuxt_error') ||
+    path.startsWith('/__vite_ping')
+  ) {
+    return true
+  }
+
+  return path.includes('.')
 }

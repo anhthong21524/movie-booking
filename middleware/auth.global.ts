@@ -1,7 +1,7 @@
 import { DEFAULT_AUTH_REDIRECT } from '~/constants/auth'
 import {
-  buildLoginRedirectLocation,
   classifyRouteAccess,
+  resolveRouteRedirect,
 } from '~/utils/auth-routing'
 
 export default defineNuxtRouteMiddleware(async (to) => {
@@ -16,19 +16,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   await appAuth.ensureResolved()
 
-  if (access === 'guest') {
-    if (userStore.isAuthenticated) {
-      return navigateTo(DEFAULT_AUTH_REDIRECT)
-    }
+  const redirectTarget = resolveRouteRedirect({
+    access,
+    fullPath: to.fullPath,
+    isAuthenticated: userStore.isAuthenticated,
+    isAdmin: userStore.isAdmin,
+  })
 
-    return
-  }
-
-  if (!userStore.isAuthenticated) {
-    return navigateTo(buildLoginRedirectLocation(to.fullPath))
-  }
-
-  if (access === 'admin' && !userStore.isAdmin) {
+  if (redirectTarget === DEFAULT_AUTH_REDIRECT) {
     return navigateTo(DEFAULT_AUTH_REDIRECT)
+  }
+
+  if (redirectTarget) {
+    return navigateTo(redirectTarget)
   }
 })
