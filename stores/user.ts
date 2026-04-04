@@ -1,29 +1,23 @@
-interface UserProfile {
-  id: string
-  name: string
-  email: string
-}
+import type { AuthSessionUser } from '~/types/auth'
 
 export const useUserStore = defineStore('user', () => {
-  const profile = ref<UserProfile | null>(null)
-  const token = ref<string | null>(null)
+  const profile = ref<AuthSessionUser | null>(null)
 
-  const isAuthenticated = computed(() => Boolean(token.value))
+  const isAuthenticated = computed(() => Boolean(profile.value?.id))
+  const isAdmin = computed(() => profile.value?.role === 'ADMIN')
 
-  const setUser = (user: UserProfile, accessToken: string) => {
+  const setUser = (user: AuthSessionUser) => {
     profile.value = user
-    token.value = accessToken
   }
 
   const clearUser = () => {
     profile.value = null
-    token.value = null
   }
 
   return {
     profile,
-    token,
     isAuthenticated,
+    isAdmin,
     setUser,
     clearUser,
   }

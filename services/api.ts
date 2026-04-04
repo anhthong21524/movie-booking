@@ -13,7 +13,6 @@ class ApiService {
     options: ApiRequestOptions = {},
   ): Promise<TResponse> {
     const config = useRuntimeConfig()
-    const userStore = useUserStore()
 
     try {
       return await $fetch<TResponse>(path, {
@@ -26,9 +25,6 @@ class ApiService {
           | null
           | undefined,
         headers: {
-          ...(userStore.token
-            ? { Authorization: `Bearer ${userStore.token}` }
-            : {}),
           ...options.headers,
         },
         onResponseError: ({ response }) => {
