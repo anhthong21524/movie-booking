@@ -37,6 +37,7 @@ export interface Booking {
   id: string
   showtimeId: string
   seats: Seat[]
+  unitPrice: number
   status: BookingStatus
   totalAmount: number
   createdAt: string
