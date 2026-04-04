@@ -36,11 +36,13 @@ export interface Seat {
 export interface Booking {
   id: string
   showtimeId: string
+  seatIds: string[]
   seats: Seat[]
   unitPrice: number
   status: BookingStatus
   totalAmount: number
   createdAt: string
+  confirmedAt?: string
 }
 
 export interface Payment {
