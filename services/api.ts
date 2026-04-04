@@ -1,3 +1,5 @@
+import { normalizeApiError } from '~/utils/app-error'
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export interface ApiRequestOptions<TBody = unknown> {
@@ -5,6 +7,8 @@ export interface ApiRequestOptions<TBody = unknown> {
   query?: Record<string, string | number | boolean | undefined>
   body?: TBody
   headers?: HeadersInit
+  baseURL?: string
+  timeoutMs?: number
 }
 
 class ApiService {
@@ -12,11 +16,28 @@ class ApiService {
     path: string,
     options: ApiRequestOptions = {},
   ): Promise<TResponse> {
+    return this.runRequest<TResponse>(path, options)
+  }
+
+  async requestLocal<TResponse>(
+    path: string,
+    options: ApiRequestOptions = {},
+  ): Promise<TResponse> {
+    return this.runRequest<TResponse>(path, {
+      ...options,
+      baseURL: '',
+    })
+  }
+
+  private async runRequest<TResponse>(
+    path: string,
+    options: ApiRequestOptions,
+  ): Promise<TResponse> {
     const config = useRuntimeConfig()
 
     try {
       return await $fetch<TResponse>(path, {
-        baseURL: config.public.apiBaseUrl,
+        baseURL: options.baseURL ?? config.public.apiBaseUrl,
         method: options.method || 'GET',
         query: options.query,
         body: options.body as
@@ -24,35 +45,15 @@ class ApiService {
           | Record<string, unknown>
           | null
           | undefined,
+        timeout: options.timeoutMs ?? 10000,
         headers: {
+          Accept: 'application/json, text/plain;q=0.9, */*;q=0.8',
           ...options.headers,
-        },
-        onResponseError: ({ response }) => {
-          throw createError({
-            statusCode: response.status,
-            statusMessage:
-              response._data?.message ||
-              response.statusText ||
-              'API request failed',
-            data: response._data,
-          })
         },
       })
     } catch (error) {
-      throw this.normalizeError(error)
+      throw normalizeApiError(error)
     }
-  }
-
-  private normalizeError(error: unknown) {
-    if (error && typeof error === 'object' && 'statusMessage' in error) {
-      return error
-    }
-
-    return createError({
-      statusCode: 500,
-      statusMessage: 'Unexpected API error',
-      data: error,
-    })
   }
 }
 

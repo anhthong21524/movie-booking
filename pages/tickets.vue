@@ -1,33 +1,40 @@
 <script setup lang="ts">
 import { useBookingStore } from '~/stores/booking'
+import type { TicketHistoryState } from '~/types/tickets'
 import { buildTicketHistoryState } from '~/utils/tickets'
 
 const { locale, t } = useI18n()
 const { localizedMovies, localizedShowtimes } = useCatalog()
 const bookingStore = useBookingStore()
+const { getMessage } = useApiError()
 
-const isPageReady = ref(false)
-const pageError = ref<Error | null>(null)
+const loadTicketHistory = async (): Promise<TicketHistoryState> => {
+  bookingStore.hydrateBooking()
 
-onMounted(() => {
-  try {
-    bookingStore.hydrateBooking()
-    isPageReady.value = true
-  } catch (error) {
-    pageError.value =
-      error instanceof Error ? error : new Error('Unable to load tickets page.')
-    isPageReady.value = true
-  }
-})
-
-const ticketHistoryState = computed(() =>
-  buildTicketHistoryState({
+  return buildTicketHistoryState({
     bookings: bookingStore.bookingHistory,
     movies: localizedMovies.value,
     showtimes: localizedShowtimes.value,
     locale: locale.value,
-  }),
+  })
+}
+
+const {
+  data: ticketHistoryState,
+  error: pageError,
+  status: pageStatus,
+  canRetry,
+  execute,
+  retry,
+} = useRetryableRequest(loadTicketHistory)
+
+const pageErrorMessage = computed(() =>
+  pageError.value ? getMessage(pageError.value, 'page') : null,
 )
+
+onMounted(async () => {
+  await execute()
+})
 </script>
 
 <template>
@@ -38,7 +45,7 @@ const ticketHistoryState = computed(() =>
     />
 
     <section
-      v-if="!isPageReady"
+      v-if="pageStatus === 'loading' || pageStatus === 'idle'"
       class="space-y-5"
       aria-busy="true"
       aria-live="polite"
@@ -62,16 +69,18 @@ const ticketHistoryState = computed(() =>
       </div>
     </section>
 
-    <EmptyState
-      v-else-if="pageError"
-      title="We could not load your bookings"
-      description="Refresh the page to retry. If the issue persists, return to the movie list and check your bookings again later."
-      action-label="Browse movies"
-      action-to="/movies"
+    <FullPageErrorState
+      v-else-if="pageError && pageErrorMessage"
+      :title="pageErrorMessage.title"
+      :description="pageErrorMessage.description"
+      :retry-label="pageErrorMessage.retryLabel"
+      :retry-disabled="!canRetry"
+      :retry-pending="false"
+      @retry="retry"
     />
 
     <EmptyState
-      v-else-if="ticketHistoryState.kind === 'malformed'"
+      v-else-if="ticketHistoryState?.kind === 'malformed'"
       title="Booking history is temporarily unavailable"
       description="All saved bookings were malformed or linked to invalid showtimes, so tickets could not be rendered safely."
       action-label="Browse movies"
@@ -79,22 +88,22 @@ const ticketHistoryState = computed(() =>
     />
 
     <EmptyState
-      v-else-if="ticketHistoryState.kind === 'empty'"
+      v-else-if="ticketHistoryState?.kind === 'empty'"
       :title="t('ticketsPage.emptyTitle')"
       :description="t('ticketsPage.emptyDescription')"
       :action-label="t('ticketsPage.action')"
       action-to="/movies"
     />
 
-    <section v-else class="space-y-5">
-      <div
+    <section v-else-if="ticketHistoryState?.kind === 'ready'" class="space-y-5">
+      <SectionErrorState
         v-if="ticketHistoryState.malformedCount"
-        class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
-      >
-        {{
+        title="Some bookings were hidden"
+        :description="
           `${ticketHistoryState.malformedCount} malformed booking ${ticketHistoryState.malformedCount === 1 ? 'record was' : 'records were'} hidden because required ticket data was missing or invalid.`
-        }}
-      </div>
+        "
+        :show-retry="false"
+      />
 
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
