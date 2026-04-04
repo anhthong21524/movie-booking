@@ -1,8 +1,27 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@nuxt/eslint'],
+  modules: [
+    '@nuxtjs/tailwindcss',
+    '@pinia/nuxt',
+    '@nuxt/eslint',
+    '@sidebase/nuxt-auth',
+  ],
   css: ['~/assets/css/main.css'],
+  auth: {
+    originEnvKey: 'AUTH_ORIGIN',
+    baseURL: '/api/auth',
+    provider: {
+      type: 'authjs',
+    },
+    sessionRefresh: {
+      enableOnWindowFocus: true,
+      enablePeriodically: false,
+    },
+    globalAppMiddleware: {
+      isEnabled: false,
+    },
+  },
   typescript: {
     strict: true,
     typeCheck: 'build',
