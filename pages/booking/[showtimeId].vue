@@ -2,10 +2,6 @@
 import { MOCK_SEATS } from '~/mocks'
 import { useBookingStore } from '~/stores/booking'
 
-definePageMeta({
-  middleware: ['auth'],
-})
-
 const route = useRoute()
 const bookingStore = useBookingStore()
 const { t } = useI18n()

@@ -1,13 +1,12 @@
 import { DEFAULT_AUTH_REDIRECT } from '~/constants/auth'
 
 export default defineNuxtRouteMiddleware(async () => {
-  const { data, getSession, status } = useAuth()
+  const appAuth = useAppAuth()
+  const userStore = useUserStore()
 
-  if (status.value === 'loading') {
-    await getSession()
-  }
+  await appAuth.ensureResolved()
 
-  if (status.value === 'authenticated' && data.value?.user?.id) {
+  if (userStore.isAuthenticated) {
     return navigateTo(DEFAULT_AUTH_REDIRECT)
   }
 })

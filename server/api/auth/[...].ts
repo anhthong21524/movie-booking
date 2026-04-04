@@ -105,18 +105,24 @@ const authOptions: AuthOptions = {
         token.id = user.id
         token.name = user.name
         token.email = user.email
-        token.role = user.role
+        token.role = user.role === 'ADMIN' ? 'ADMIN' : 'USER'
       }
 
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = String(token.id ?? '')
-        session.user.name = String(token.name ?? '')
-        session.user.email = String(token.email ?? '')
-        session.user.role = (token.role as AuthRole | undefined) ?? 'USER'
+      if (!session.user || typeof token.id !== 'string' || token.id.length === 0) {
+        return {
+          ...session,
+          expires: new Date(0).toISOString(),
+          user: undefined,
+        }
       }
+
+      session.user.id = token.id
+      session.user.name = String(token.name ?? '')
+      session.user.email = String(token.email ?? '')
+      session.user.role = (token.role as AuthRole | undefined) === 'ADMIN' ? 'ADMIN' : 'USER'
 
       return session
     },

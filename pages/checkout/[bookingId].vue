@@ -2,10 +2,6 @@
 import { formatCurrency } from '~/utils/format'
 import { useBookingStore } from '~/stores/booking'
 
-definePageMeta({
-  middleware: ['auth'],
-})
-
 const bookingStore = useBookingStore()
 const { locale, t } = useI18n()
 </script>
