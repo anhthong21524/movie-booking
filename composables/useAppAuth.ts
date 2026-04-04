@@ -1,11 +1,17 @@
 import { AUTH_SYNC_STORAGE_KEY, DEFAULT_AUTH_REDIRECT } from '~/constants/auth'
-import type { AuthSessionUser, AuthStatus } from '~/types/auth'
+import type {
+  AuthSessionSnapshot,
+  AuthSessionUser,
+  AuthStatus,
+} from '~/types/auth'
 
 const toSessionSnapshot = (
   status: 'loading' | 'authenticated' | 'unauthenticated',
   user: Partial<AuthSessionUser> | null | undefined,
-) => ({
+  expiresAt?: string | null,
+): AuthSessionSnapshot => ({
   status,
+  expiresAt: expiresAt ?? null,
   user: user
     ? {
         id: user.id,
@@ -26,6 +32,7 @@ export const useAppAuth = () => {
       toSessionSnapshot(
         auth.status.value,
         (auth.data.value?.user as Partial<AuthSessionUser> | undefined) ?? null,
+        auth.data.value?.expires,
       ),
     )
 
@@ -72,6 +79,35 @@ export const useAppAuth = () => {
     }
   }
 
+  const handleExpiredSession = async () => {
+    if (userStore.status !== 'authenticated') {
+      invalidateClientState('expired')
+      broadcastAuthSync()
+      return
+    }
+
+    try {
+      await auth.signOut({
+        callbackUrl: DEFAULT_AUTH_REDIRECT,
+        redirect: false,
+      })
+    } finally {
+      invalidateClientState('expired')
+      broadcastAuthSync()
+    }
+  }
+
+  const refreshSession = async () => {
+    try {
+      await auth.getSession()
+    } catch {
+      invalidateClientState(userStore.hasResolved ? 'expired' : 'unauthenticated')
+      broadcastAuthSync()
+    }
+
+    return syncFromSource()
+  }
+
   return {
     data: auth.data,
     authStatus: auth.status,
@@ -79,6 +115,8 @@ export const useAppAuth = () => {
     ensureResolved,
     syncFromSource,
     invalidateClientState,
+    refreshSession,
+    handleExpiredSession,
     logout,
   }
 }
