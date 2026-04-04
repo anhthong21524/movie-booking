@@ -271,9 +271,13 @@ const retryRegister = async () => {
               />
             </label>
 
-            <button class="btn-primary w-full" :disabled="isSubmitting">
-              {{ isSubmitting ? `${copy.submit}...` : copy.submit }}
-            </button>
+            <LoadingButton
+              type="submit"
+              block
+              :label="copy.submit"
+              :loading="isSubmitting"
+              :loading-label="`${copy.submit}...`"
+            />
           </form>
 
           <p class="mt-6 text-sm text-slate-600">
