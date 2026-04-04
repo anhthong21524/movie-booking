@@ -21,6 +21,8 @@ export interface Showtime {
   startsAt: string
   roomName: string
   price: number
+  capacity?: number
+  remainingSeats?: number
 }
 
 export interface Seat {

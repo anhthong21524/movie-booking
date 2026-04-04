@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Movie } from '~/types'
+import { buildMovieDetailRoute } from '~/utils/routes'
 
 defineProps<{
   movie: Movie
@@ -29,7 +30,7 @@ const { t } = useI18n()
         </span>
       </div>
       <p class="line-clamp-3 text-sm text-slate-600">{{ movie.description }}</p>
-      <NuxtLink :to="`/movies/${movie.id}`" class="btn-secondary w-full">
+      <NuxtLink :to="buildMovieDetailRoute(movie.id)" class="btn-secondary w-full">
         {{ t('common.viewDetails') }}
       </NuxtLink>
     </div>
