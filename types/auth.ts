@@ -13,6 +13,12 @@ export interface AuthSessionUser {
   role: AuthRole
 }
 
+export interface AuthSessionSnapshot {
+  status: 'loading' | 'authenticated' | 'unauthenticated'
+  user?: Partial<AuthSessionUser> | null
+  expiresAt?: string | null
+}
+
 export interface CredentialsSignInBody {
   email: string
   password: string

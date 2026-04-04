@@ -1,9 +1,9 @@
-import type { AuthSessionUser, AuthRole, AuthStatus } from '~/types/auth'
-
-interface SessionSnapshot {
-  status: 'loading' | 'authenticated' | 'unauthenticated'
-  user?: Partial<AuthSessionUser> | null
-}
+import type {
+  AuthSessionSnapshot,
+  AuthSessionUser,
+  AuthRole,
+  AuthStatus,
+} from '~/types/auth'
 
 const normalizeRole = (role: unknown): AuthRole => {
   return role === 'ADMIN' ? 'ADMIN' : 'USER'
@@ -28,19 +28,22 @@ export const useUserStore = defineStore('user', () => {
   const profile = ref<AuthSessionUser | null>(null)
   const status = ref<AuthStatus>('loading')
   const hasResolved = ref(false)
+  const expiresAt = ref<string | null>(null)
 
   const isResolved = computed(() => status.value !== 'loading')
   const isAuthenticated = computed(() => status.value === 'authenticated')
   const isAdmin = computed(() => profile.value?.role === 'ADMIN')
 
-  const setUser = (user: AuthSessionUser) => {
+  const setUser = (user: AuthSessionUser, nextExpiresAt?: string | null) => {
     profile.value = user
+    expiresAt.value = nextExpiresAt ?? null
     status.value = 'authenticated'
     hasResolved.value = true
   }
 
   const clearUser = (nextStatus: Exclude<AuthStatus, 'authenticated' | 'loading'> = 'unauthenticated') => {
     profile.value = null
+    expiresAt.value = null
     status.value = nextStatus
     hasResolved.value = true
   }
@@ -51,20 +54,34 @@ export const useUserStore = defineStore('user', () => {
 
   const beginLogout = () => {
     profile.value = null
+    expiresAt.value = null
     status.value = 'logging_out'
     hasResolved.value = true
   }
 
-  const syncFromSession = (snapshot: SessionSnapshot) => {
+  const markExpired = () => {
+    clearUser('expired')
+  }
+
+  const syncFromSession = (snapshot: AuthSessionSnapshot) => {
     if (snapshot.status === 'loading') {
       setLoading()
       return
     }
 
     const normalizedUser = normalizeSessionUser(snapshot.user)
+    const expiresOn =
+      typeof snapshot.expiresAt === 'string' && snapshot.expiresAt.length > 0
+        ? Date.parse(snapshot.expiresAt)
+        : Number.NaN
 
-    if (snapshot.status === 'authenticated' && normalizedUser) {
-      setUser(normalizedUser)
+    if (
+      snapshot.status === 'authenticated' &&
+      normalizedUser &&
+      Number.isFinite(expiresOn) &&
+      expiresOn > Date.now()
+    ) {
+      setUser(normalizedUser, snapshot.expiresAt ?? null)
       return
     }
 
@@ -75,6 +92,7 @@ export const useUserStore = defineStore('user', () => {
     profile,
     status,
     hasResolved,
+    expiresAt,
     isResolved,
     isAuthenticated,
     isAdmin,
@@ -82,6 +100,7 @@ export const useUserStore = defineStore('user', () => {
     clearUser,
     setLoading,
     beginLogout,
+    markExpired,
     syncFromSession,
   }
 })
