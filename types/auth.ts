@@ -1,4 +1,10 @@
 export type AuthRole = 'USER' | 'ADMIN'
+export type AuthStatus =
+  | 'loading'
+  | 'unauthenticated'
+  | 'authenticated'
+  | 'expired'
+  | 'logging_out'
 
 export interface AuthSessionUser {
   id: string

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import {
-  DEFAULT_AUTH_REDIRECT,
   LOGIN_PATH,
   REGISTER_PATH,
 } from '~/constants/auth'
 import { MAIN_NAVIGATION } from '~/constants/navigation'
-import type { AuthSessionUser } from '~/types/auth'
 
-const { data, signOut, status } = useAuth()
+const appAuth = useAppAuth()
 const userStore = useUserStore()
 const { locale, setLocale, t } = useI18n()
 
@@ -29,32 +27,6 @@ const authCopy = computed(() => {
   }
 })
 
-watchEffect(() => {
-  const sessionUser = data.value?.user
-
-  if (
-    status.value === 'authenticated' &&
-    sessionUser?.id &&
-    sessionUser.name &&
-    sessionUser.email &&
-    sessionUser.role
-  ) {
-    const profile: AuthSessionUser = {
-      id: sessionUser.id,
-      name: sessionUser.name,
-      email: sessionUser.email,
-      role: sessionUser.role,
-    }
-
-    userStore.setUser(profile)
-    return
-  }
-
-  if (status.value !== 'loading') {
-    userStore.clearUser()
-  }
-})
-
 const navigation = computed(() =>
   MAIN_NAVIGATION.filter((item) => {
     if (item.requiresAdmin) {
@@ -72,15 +44,11 @@ const navigation = computed(() =>
   })),
 )
 
+const showAuthControls = computed(() => userStore.isResolved)
+
 const handleLogout = async () => {
-  userStore.clearUser()
-
-  await signOut({
-    callbackUrl: DEFAULT_AUTH_REDIRECT,
-    redirect: false,
-  })
-
-  await navigateTo(DEFAULT_AUTH_REDIRECT)
+  await appAuth.logout()
+  await navigateTo('/')
 }
 </script>
 
@@ -104,7 +72,7 @@ const handleLogout = async () => {
         </nav>
 
         <div
-          v-if="userStore.isAuthenticated && userStore.profile"
+          v-if="showAuthControls && userStore.isAuthenticated && userStore.profile"
           class="flex items-center gap-3"
         >
           <span class="text-sm font-medium text-slate-600">
@@ -115,7 +83,7 @@ const handleLogout = async () => {
           </button>
         </div>
 
-        <div v-else class="flex items-center gap-3">
+        <div v-else-if="showAuthControls" class="flex items-center gap-3">
           <NuxtLink :to="LOGIN_PATH" class="btn-secondary">
             {{ authCopy.login }}
           </NuxtLink>
@@ -123,6 +91,8 @@ const handleLogout = async () => {
             {{ authCopy.register }}
           </NuxtLink>
         </div>
+
+        <div v-else class="h-10 w-36 animate-pulse rounded-2xl bg-slate-200" />
 
         <div
           class="flex items-center rounded-full border border-border bg-white p-1"

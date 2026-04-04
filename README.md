@@ -78,6 +78,8 @@ npm run dev
 ```bash
 npm run build
 npm run preview
+# or run the built server directly
+npm run start
 ```
 
 ## Quality Checks
@@ -98,9 +100,18 @@ Create a `.env` file from `.env.example` if needed.
 
 ```env
 NUXT_PUBLIC_API_BASE_URL=https://api.example.com
+AUTH_ORIGIN=http://localhost:3000
+NUXT_AUTH_SECRET=replace-with-a-long-random-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
-This variable is used in Nuxt runtime config as the base URL for API calls.
+Notes:
+
+- `AUTH_ORIGIN` must be the site origin only, for example `http://localhost:3000`.
+- Do not include `/api/auth` in `AUTH_ORIGIN`; `baseURL` is configured separately.
+- `NUXT_AUTH_SECRET` is required for auth session signing.
+- The Google variables are required only when Google OAuth is enabled.
 
 ## Included Setup
 

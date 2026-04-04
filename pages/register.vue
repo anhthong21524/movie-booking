@@ -7,11 +7,8 @@ import {
   REDIRECT_QUERY_KEY,
   REGISTER_SUCCESS_QUERY_KEY,
 } from '~/constants/auth'
+import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 import type { RegisterRequestBody, RegisterResponse } from '~/types/auth'
-
-definePageMeta({
-  middleware: ['guest'],
-})
 
 const route = useRoute()
 const { locale } = useI18n()
@@ -74,13 +71,7 @@ const copy = computed(() => {
 })
 
 const redirectTarget = computed(() => {
-  const queryValue = route.query[REDIRECT_QUERY_KEY]
-
-  if (typeof queryValue === 'string' && queryValue.startsWith('/')) {
-    return queryValue
-  }
-
-  return DEFAULT_AUTH_REDIRECT
+  return sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) || DEFAULT_AUTH_REDIRECT
 })
 
 const loginLink = computed(() => {
