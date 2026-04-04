@@ -55,21 +55,14 @@ defineEmits<{
     </div>
 
     <div class="mt-6 space-y-3">
-      <button
-        type="button"
-        class="btn-primary w-full"
-        :disabled="confirmDisabled || submitState === 'submitting' || submitState === 'success'"
-        :aria-disabled="confirmDisabled || submitState === 'submitting' || submitState === 'success'"
+      <LoadingButton
+        block
+        :label="submitState === 'success' ? 'Booking confirmed' : 'Confirm booking'"
+        :loading="submitState === 'submitting'"
+        loading-label="Confirming booking..."
+        :disabled="confirmDisabled || submitState === 'success'"
         @click="$emit('confirm')"
-      >
-        {{
-          submitState === 'submitting'
-            ? 'Confirming booking...'
-            : submitState === 'success'
-              ? 'Booking confirmed'
-              : 'Confirm booking'
-        }}
-      </button>
+      />
 
       <NuxtLink :to="backToSeatsTo" class="btn-secondary w-full text-center">
         Back to seats

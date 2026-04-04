@@ -73,15 +73,13 @@ defineEmits<{
         <p class="text-sm text-slate-500">Subtotal</p>
         <p class="text-2xl font-bold text-slate-950">{{ summary.formattedSubtotal }}</p>
       </div>
-      <button
-        type="button"
-        class="btn-primary min-w-[12rem]"
-        :disabled="actionDisabled || actionPending"
-        :aria-disabled="actionDisabled || actionPending"
+      <LoadingButton
+        :label="actionLabel"
+        :loading="actionPending"
+        loading-label="Opening checkout..."
+        :disabled="actionDisabled"
         @click="$emit('continue')"
-      >
-        {{ actionPending ? 'Opening checkout...' : actionLabel }}
-      </button>
+      />
     </div>
   </aside>
 </template>

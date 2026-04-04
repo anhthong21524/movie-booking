@@ -212,18 +212,25 @@ const handleGoogleLogin = async () => {
               />
             </label>
 
-            <button class="btn-primary w-full" :disabled="isSubmitting">
-              {{ isSubmitting ? `${copy.submit}...` : copy.submit }}
-            </button>
+            <LoadingButton
+              type="submit"
+              block
+              :label="copy.submit"
+              :loading="isSubmitting"
+              :loading-label="`${copy.submit}...`"
+            />
           </form>
 
-          <button
-            class="btn-secondary mt-4 w-full"
-            :disabled="!hasGoogleProvider || isGoogleSubmitting"
+          <LoadingButton
+            class="mt-4"
+            variant="secondary"
+            block
+            :label="copy.google"
+            :loading="isGoogleSubmitting"
+            :loading-label="`${copy.google}...`"
+            :disabled="!hasGoogleProvider"
             @click="handleGoogleLogin"
-          >
-            {{ isGoogleSubmitting ? `${copy.google}...` : copy.google }}
-          </button>
+          />
 
           <p class="mt-6 text-sm text-slate-600">
             {{ copy.noAccount }}
