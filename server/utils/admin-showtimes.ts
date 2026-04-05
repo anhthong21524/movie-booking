@@ -9,10 +9,10 @@ import {
 
 const cloneCinemaCatalog = () => structuredClone(ADMIN_CINEMA_CATALOG)
 
-const buildInitialShowtimes = () => {
+const buildInitialShowtimes = (): AdminScheduledShowtime[] => {
   const catalog = cloneCinemaCatalog()
 
-  return MOCK_SHOWTIMES.map((showtime) => {
+  return MOCK_SHOWTIMES.map<AdminScheduledShowtime | null>((showtime) => {
     const roomLookup = catalog
       .flatMap((cinema) => cinema.rooms.map((room) => ({ cinema, room })))
       .find((entry) => entry.room.name === showtime.roomName)
@@ -47,7 +47,7 @@ const buildInitialShowtimes = () => {
       price: showtime.price,
       capacity: roomLookup.room.capacity,
       status: 'SCHEDULED',
-    } satisfies AdminScheduledShowtime
+    }
   }).filter((item): item is AdminScheduledShowtime => Boolean(item))
 }
 

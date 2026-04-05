@@ -1,4 +1,4 @@
-import type { Movie } from '~/types'
+import type { Movie, MovieStatus } from '~/types'
 
 export interface AdminMovieFormValues {
   title: string
@@ -9,6 +9,7 @@ export interface AdminMovieFormValues {
   releaseDate: string
   basePrice: string
   posterUrl: string
+  status: MovieStatus
 }
 
 export type AdminMovieFormField =
@@ -20,6 +21,7 @@ export type AdminMovieFormField =
   | 'releaseDate'
   | 'basePrice'
   | 'posterUrl'
+  | 'status'
 
 export type AdminMovieFieldErrors = Partial<
   Record<AdminMovieFormField, string[]>
@@ -38,14 +40,10 @@ export interface PosterUploadResponse {
 
 export interface AdminMoviesResponse {
   items: Movie[]
+  page: number
+  size: number
+  totalItems: number
+  totalPages: number
 }
 
-export interface AdminMovieMutationResponse {
-  item: Movie
-  message: string
-}
-
-export interface AdminMovieDeleteResponse {
-  id: string
-  message: string
-}
+export type AdminMovieMutationResponse = Movie

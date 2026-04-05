@@ -1,18 +1,26 @@
-import type { AdminShowtimeBootstrapResponse } from '~/types/admin-showtime'
+import type {
+  AdminScheduledShowtime,
+} from '~/types/admin-showtime'
 import { requireServerRole } from '~/server/utils/auth-session'
-import { listAdminMovies } from '~/server/utils/admin-movies'
-import {
-  getAdminCinemaCatalog,
-  listAdminShowtimes,
-} from '~/server/utils/admin-showtimes'
+import { listAdminShowtimes } from '~/server/utils/admin-showtimes'
 
-export default defineEventHandler(async (event): Promise<AdminShowtimeBootstrapResponse> => {
+export default defineEventHandler(async (event): Promise<{
+  items: AdminScheduledShowtime[]
+  page: number
+  size: number
+  totalItems: number
+  totalPages: number
+}> => {
   await requireServerRole(event, 'ADMIN')
 
+  const items = listAdminShowtimes()
+
   return {
-    items: listAdminShowtimes(),
-    movies: listAdminMovies(),
-    cinemas: getAdminCinemaCatalog(),
+    items,
+    page: 0,
+    size: items.length,
+    totalItems: items.length,
+    totalPages: items.length ? 1 : 0,
   }
 })
 

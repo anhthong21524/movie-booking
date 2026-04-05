@@ -7,5 +7,9 @@ export default defineEventHandler(async (event): Promise<AdminMoviesResponse> =>
 
   return {
     items: listAdminMovies(),
+    page: 0,
+    size: listAdminMovies().length,
+    totalItems: listAdminMovies().length,
+    totalPages: listAdminMovies().length ? 1 : 0,
   }
 })

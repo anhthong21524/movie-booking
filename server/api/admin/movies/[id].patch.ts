@@ -1,5 +1,5 @@
 import type { AdminMovieMutationResponse } from '~/types/admin-movie'
-import type { Movie } from '~/types'
+import type { Movie, MovieStatus } from '~/types'
 import { requireServerRole } from '~/server/utils/auth-session'
 import { updateAdminMovie } from '~/server/utils/admin-movies'
 import {
@@ -7,7 +7,23 @@ import {
   validateMovieFormValues,
 } from '~/utils/admin-movie-validation'
 
-const toFormValues = (body: Partial<Omit<Movie, 'id'>>) => ({
+const normalizeMovieStatus = (status: unknown): MovieStatus => {
+  return status === 'COMING_SOON' || status === 'ARCHIVED'
+    ? status
+    : 'NOW_SHOWING'
+}
+
+const toFormValues = (body: Partial<Omit<Movie, 'id'>>): {
+  title: string
+  durationMinutes: string
+  genre: string
+  description: string
+  rating: string
+  releaseDate: string
+  basePrice: string
+  posterUrl: string
+  status: MovieStatus
+} => ({
   title: typeof body.title === 'string' ? body.title : '',
   durationMinutes:
     body.durationMinutes === undefined ? '' : String(body.durationMinutes),
@@ -17,6 +33,7 @@ const toFormValues = (body: Partial<Omit<Movie, 'id'>>) => ({
   releaseDate: typeof body.releaseDate === 'string' ? body.releaseDate : '',
   basePrice: body.basePrice === undefined ? '' : String(body.basePrice),
   posterUrl: typeof body.posterUrl === 'string' ? body.posterUrl : '',
+  status: normalizeMovieStatus(body.status),
 })
 
 export default defineEventHandler(
@@ -54,6 +71,7 @@ export default defineEventHandler(
       releaseDate: body.releaseDate!.trim(),
       basePrice: Number(body.basePrice),
       posterUrl: typeof body.posterUrl === 'string' ? body.posterUrl.trim() : undefined,
+      status: normalizeMovieStatus(body.status),
     })
 
     if (!item) {
@@ -63,9 +81,6 @@ export default defineEventHandler(
       })
     }
 
-    return {
-      item,
-      message: 'Movie updated successfully.',
-    }
+    return item
   },
 )
