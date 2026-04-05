@@ -11,7 +11,7 @@ const { getMessage } = useApiError()
 const { request } = useApi()
 
 const loadTicketHistory = async (): Promise<TicketHistoryState> => {
-  bookingStore.hydrateBooking()
+  await bookingStore.fetchBookingHistory()
 
   if (!bookingStore.bookingHistory.length) {
     return buildTicketHistoryState({
