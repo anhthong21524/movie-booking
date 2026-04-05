@@ -1,18 +1,12 @@
-import { LOGIN_PATH, REDIRECT_QUERY_KEY } from '~/constants/auth'
+import { buildLoginRedirectLocation } from '~/utils/auth-routing'
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const { data, getSession, status } = useAuth()
+  const appAuth = useAppAuth()
+  const userStore = useUserStore()
 
-  if (status.value === 'loading') {
-    await getSession()
-  }
+  await appAuth.ensureResolved()
 
-  if (status.value !== 'authenticated' || !data.value?.user?.id) {
-    return navigateTo({
-      path: LOGIN_PATH,
-      query: {
-        [REDIRECT_QUERY_KEY]: to.fullPath,
-      },
-    })
+  if (!userStore.isAuthenticated) {
+    return navigateTo(buildLoginRedirectLocation(to.fullPath))
   }
 })

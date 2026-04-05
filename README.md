@@ -73,11 +73,16 @@ npm install
 npm run dev
 ```
 
+Local development is standardized on [http://127.0.0.1:3000](http://127.0.0.1:3000).
+Use that exact origin for browser testing and Google OAuth callbacks.
+
 ## Production Build
 
 ```bash
 npm run build
 npm run preview
+# or run the built server directly
+npm run start
 ```
 
 ## Quality Checks
@@ -98,9 +103,19 @@ Create a `.env` file from `.env.example` if needed.
 
 ```env
 NUXT_PUBLIC_API_BASE_URL=https://api.example.com
+AUTH_ORIGIN=http://127.0.0.1:3000
+NUXT_AUTH_SECRET=replace-with-a-long-random-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
-This variable is used in Nuxt runtime config as the base URL for API calls.
+Notes:
+
+- `AUTH_ORIGIN` must be the site origin only, for example `http://127.0.0.1:3000`.
+- Do not include `/api/auth` in `AUTH_ORIGIN`; `baseURL` is configured separately.
+- `NUXT_AUTH_SECRET` is required for auth session signing.
+- The Google variables are required only when Google OAuth is enabled.
+- `npm run dev` binds to `127.0.0.1:3000` by default so local OAuth and manual testing stay aligned.
 
 ## Included Setup
 

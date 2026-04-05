@@ -1,3 +1,8 @@
+const authOrigin = (process.env.AUTH_ORIGIN || 'http://localhost:3000').replace(
+  /\/$/,
+  '',
+)
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
@@ -9,10 +14,11 @@ export default defineNuxtConfig({
   ],
   css: ['~/assets/css/main.css'],
   auth: {
-    originEnvKey: 'AUTH_ORIGIN',
-    baseURL: '/api/auth',
+    originEnvKey: '',
+    baseURL: `${authOrigin}/api/auth`,
     provider: {
       type: 'authjs',
+      trustHost: true,
     },
     sessionRefresh: {
       enableOnWindowFocus: true,
