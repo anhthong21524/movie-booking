@@ -157,8 +157,9 @@ const handleLogout = async () => {
               v-if="userStore.isAuthenticated && userStore.profile"
               class="flex items-center gap-3"
             >
-              <div
-                class="hidden items-center rounded-2xl border border-border bg-white px-5 py-3 sm:flex"
+              <NuxtLink
+                to="/profile"
+                class="hidden items-center rounded-2xl border border-border bg-white px-5 py-3 transition-colors hover:border-primary-200 hover:bg-primary-50 sm:flex"
               >
                 <p class="truncate text-sm font-semibold text-slate-900">
                   {{ authCopy.welcome }},
@@ -166,7 +167,7 @@ const handleLogout = async () => {
                     {{ userStore.profile.name }}
                   </span>
                 </p>
-              </div>
+              </NuxtLink>
 
               <button
                 class="btn-secondary"
