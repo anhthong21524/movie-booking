@@ -15,6 +15,7 @@ export const messages = {
     nav: {
       movies: 'Movies',
       tickets: 'Tickets',
+      admin: 'Admin',
       adminMovies: 'Admin Movies',
       adminShowtimes: 'Admin Showtimes',
     },
@@ -138,6 +139,7 @@ export const messages = {
     },
     nav: {
       movies: 'Phim',
+      admin: 'Quáº£n trá»‹',
       tickets: 'Vé của tôi',
       adminMovies: 'Quản lý phim',
       adminShowtimes: 'Quản lý suất chiếu',
