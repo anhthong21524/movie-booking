@@ -139,6 +139,16 @@ export const useBookingStore = defineStore('booking', () => {
     persistBookingHistory()
   }
 
+  const fetchBookingHistory = async () => {
+    try {
+      const results = await apiService.request<Booking[]>('/api/v1/bookings')
+      bookingHistory.value = results
+      persistBookingHistory()
+    } catch {
+      // fall back to whatever is already in memory/localStorage
+    }
+  }
+
   const startBooking = async (showtimeId: string, seatIds: string[]) => {
     const result = await apiService.request<Booking>('/api/v1/bookings', {
       method: 'POST',
@@ -218,6 +228,7 @@ export const useBookingStore = defineStore('booking', () => {
     hasHydrated,
     totalAmount,
     hydrateBooking,
+    fetchBookingHistory,
     startBooking,
     setBooking,
     confirmBooking,

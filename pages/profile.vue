@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useBookingStore } from '~/stores/booking'
 
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: 'auth', ssr: false })
 
 const userStore = useUserStore()
 const bookingStore = useBookingStore()
