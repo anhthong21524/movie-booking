@@ -6,6 +6,7 @@ definePageMeta({ middleware: 'auth' })
 const userStore = useUserStore()
 const bookingStore = useBookingStore()
 const { locale } = useI18n()
+const { avatarUrl, isUploading, uploadError, upload, remove } = useUserAvatar()
 
 const profile = computed(() => userStore.profile)
 
@@ -34,6 +35,16 @@ const totalSpendLabel = computed(() =>
   new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(totalSpend.value),
 )
 
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+const triggerUpload = () => fileInputRef.value?.click()
+
+const handleFileChange = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  await upload(file)
+  if (fileInputRef.value) fileInputRef.value.value = ''
+}
 </script>
 
 <template>
@@ -49,12 +60,67 @@ const totalSpendLabel = computed(() =>
         <div class="card p-6">
           <!-- Avatar -->
           <div class="flex flex-col items-center text-center">
-            <div
-              class="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white shadow-soft"
-              :class="userStore.isAdmin ? 'bg-primary-600' : 'bg-primary-500'"
-            >
-              {{ initials || '?' }}
+            <div class="group relative">
+              <!-- Avatar image or initials -->
+              <button
+                type="button"
+                class="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full shadow-soft ring-2 ring-white focus:outline-none focus:ring-primary-400"
+                :class="!avatarUrl ? (userStore.isAdmin ? 'bg-primary-600' : 'bg-primary-500') : ''"
+                :title="isUploading ? 'Uploading…' : 'Change photo'"
+                @click="triggerUpload"
+              >
+                <img
+                  v-if="avatarUrl"
+                  :src="avatarUrl"
+                  alt="Profile photo"
+                  class="h-full w-full object-cover"
+                />
+                <span
+                  v-else
+                  class="text-2xl font-bold text-white"
+                >
+                  {{ initials || '?' }}
+                </span>
+
+                <!-- Hover overlay -->
+                <span
+                  class="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                  :class="{ 'opacity-100': isUploading }"
+                >
+                  <svg v-if="!isUploading" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  <svg v-else class="h-5 w-5 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                  <span class="text-[10px] font-semibold text-white">
+                    {{ isUploading ? 'Uploading' : 'Change' }}
+                  </span>
+                </span>
+              </button>
+
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*"
+                class="sr-only"
+                @change="handleFileChange"
+              />
             </div>
+
+            <!-- Upload error -->
+            <p v-if="uploadError" class="mt-2 text-xs text-red-600">{{ uploadError }}</p>
+
+            <!-- Remove photo -->
+            <button
+              v-if="avatarUrl"
+              type="button"
+              class="mt-2 text-xs font-medium text-slate-400 underline-offset-2 hover:text-red-500 hover:underline"
+              @click="remove"
+            >
+              Remove photo
+            </button>
 
             <h2 class="mt-4 text-xl font-bold text-slate-950">
               {{ profile?.name || '—' }}
@@ -74,7 +140,6 @@ const totalSpendLabel = computed(() =>
               {{ userStore.isAdmin ? 'Administrator' : 'Member' }}
             </span>
           </div>
-
         </div>
 
         <!-- Quick links -->
@@ -173,7 +238,6 @@ const totalSpendLabel = computed(() =>
               Administrator
             </span>
           </div>
-
         </div>
       </div>
     </div>
