@@ -1,4 +1,3 @@
-const AVATAR_KEY_PREFIX = 'movie-booking:avatar:'
 const AVATAR_SIZE = 200
 const AVATAR_QUALITY = 0.85
 const MAX_FILE_SIZE_MB = 5
@@ -39,24 +38,24 @@ const resizeToDataUrl = (file: File): Promise<string> => {
 }
 
 export const useUserAvatar = () => {
-  const userStore = useUserStore()
-
-  const storageKey = computed(() =>
-    userStore.profile ? `${AVATAR_KEY_PREFIX}${userStore.profile.id}` : null,
-  )
-
   const avatarUrl = ref<string | null>(null)
+  const isLoading = ref(false)
   const isUploading = ref(false)
   const uploadError = ref<string | null>(null)
 
-  const load = () => {
-    if (!import.meta.client || !storageKey.value) return
-    avatarUrl.value = localStorage.getItem(storageKey.value)
+  const load = async () => {
+    isLoading.value = true
+    try {
+      const data = await $fetch<{ avatar?: string | null }>('/api/v1/users/me')
+      avatarUrl.value = data.avatar ?? null
+    } catch {
+      avatarUrl.value = null
+    } finally {
+      isLoading.value = false
+    }
   }
 
   const upload = async (file: File) => {
-    if (!storageKey.value) return
-
     uploadError.value = null
 
     if (!file.type.startsWith('image/')) {
@@ -73,25 +72,30 @@ export const useUserAvatar = () => {
 
     try {
       const dataUrl = await resizeToDataUrl(file)
-      localStorage.setItem(storageKey.value, dataUrl)
-      avatarUrl.value = dataUrl
+      const data = await $fetch<{ avatar?: string | null }>('/api/v1/users/me/avatar', {
+        method: 'PUT',
+        body: { avatar: dataUrl },
+      })
+      avatarUrl.value = data.avatar ?? dataUrl
     } catch {
-      uploadError.value = 'Could not process the image. Please try another file.'
+      uploadError.value = 'Could not save the avatar. Please try again.'
     } finally {
       isUploading.value = false
     }
   }
 
-  const remove = () => {
-    if (!storageKey.value) return
-    localStorage.removeItem(storageKey.value)
-    avatarUrl.value = null
+  const remove = async () => {
+    try {
+      await $fetch('/api/v1/users/me/avatar', { method: 'DELETE' })
+      avatarUrl.value = null
+    } catch {
+      uploadError.value = 'Could not remove the avatar. Please try again.'
+    }
   }
 
   if (import.meta.client) {
     load()
-    watch(storageKey, load)
   }
 
-  return { avatarUrl, isUploading, uploadError, upload, remove }
+  return { avatarUrl, isLoading, isUploading, uploadError, upload, remove }
 }
