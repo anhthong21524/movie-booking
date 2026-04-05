@@ -145,6 +145,9 @@ export const useBookingStore = defineStore('booking', () => {
       body: { showtimeId, seatIds },
     })
     replaceBooking(result)
+    if (result.status === 'CONFIRMED') {
+      upsertHistoryBooking(result)
+    }
     return result
   }
 

@@ -1,6 +1,6 @@
 import type { RegisterRequestBody, RegisterResponse } from '~/types/auth'
 import { getAuthValidationMessages, hasAuthFieldErrors, normalizeAuthEmail, normalizeAuthName, validateRegisterFields } from '~/utils/auth-validation'
-import { emailExists, registerUser } from '~/server/utils/auth-users'
+import { registerUser } from '~/server/utils/auth-users'
 
 export default defineEventHandler(async (event): Promise<RegisterResponse> => {
   const body = await readBody<Partial<RegisterRequestBody>>(event)
@@ -31,29 +31,34 @@ export default defineEventHandler(async (event): Promise<RegisterResponse> => {
     })
   }
 
-  if (emailExists(email)) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: messages.emailAlreadyExists,
-      data: {
-        code: 'EMAIL_EXISTS',
-        validation: {
-          email: [messages.emailAlreadyExists],
+  try {
+    const user = await registerUser({ name, email, password })
+
+    setResponseStatus(event, 201)
+
+    return {
+      message: 'Registration successful. Please sign in.',
+      user,
+    }
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status
+
+    if (status === 409) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: messages.emailAlreadyExists,
+        data: {
+          code: 'EMAIL_EXISTS',
+          validation: {
+            email: [messages.emailAlreadyExists],
+          },
         },
-      },
+      })
+    }
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Registration failed. Please try again.',
     })
-  }
-
-  const user = await registerUser({
-    name,
-    email,
-    password,
-  })
-
-  setResponseStatus(event, 201)
-
-  return {
-    message: 'Registration successful. Please sign in.',
-    user,
   }
 })
