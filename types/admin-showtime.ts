@@ -1,6 +1,8 @@
-import type { Movie } from '~/types'
-
-export type AdminShowtimeStatus = 'SCHEDULED'
+export type AdminShowtimeStatus =
+  | 'SCHEDULED'
+  | 'ONGOING'
+  | 'COMPLETED'
+  | 'CANCELLED'
 
 export interface CinemaRoom {
   id: string
@@ -61,16 +63,7 @@ export interface AdminShowtimeCreatePayload {
   price: number
 }
 
-export interface AdminShowtimeBootstrapResponse {
-  items: AdminScheduledShowtime[]
-  movies: Movie[]
-  cinemas: CinemaLocation[]
-}
-
-export interface AdminShowtimeMutationResponse {
-  item: AdminScheduledShowtime
-  message: string
-}
+export type AdminShowtimeMutationResponse = AdminScheduledShowtime
 
 export interface ShowtimeDraftPreview {
   movieTitle: string

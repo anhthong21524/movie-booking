@@ -36,6 +36,7 @@ const touched = reactive<Record<AdminMovieFormField, boolean>>({
   releaseDate: false,
   basePrice: false,
   posterUrl: false,
+  status: false,
 })
 
 const updateField = (field: AdminMovieFormField, value: string) => {
@@ -54,6 +55,7 @@ const markAllTouched = () => {
   touched.releaseDate = true
   touched.basePrice = true
   touched.posterUrl = true
+  touched.status = true
 }
 
 const getInputClass = (field: AdminMovieFormField) => {
@@ -176,6 +178,21 @@ const getVisibleError = (field: AdminMovieFormField) => {
             @blur="touched.basePrice = true"
           >
           <FieldErrorText id="movie-price-error" :message="getVisibleError('basePrice')" />
+        </label>
+
+        <label class="block space-y-2">
+          <span class="text-sm font-medium text-slate-700">Status</span>
+          <select
+            :value="values.status"
+            :class="getInputClass('status')"
+            @change="updateField('status', ($event.target as HTMLSelectElement).value)"
+            @blur="touched.status = true"
+          >
+            <option value="NOW_SHOWING">Now showing</option>
+            <option value="COMING_SOON">Coming soon</option>
+            <option value="ARCHIVED">Archived</option>
+          </select>
+          <FieldErrorText id="movie-status-error" :message="getVisibleError('status')" />
         </label>
       </div>
 

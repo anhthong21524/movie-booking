@@ -5,58 +5,38 @@ import { buildBookingRoute } from '~/utils/routes'
 
 const route = useRoute()
 const { locale, t } = useI18n()
-const { localizedMovies, localizedShowtimes } = useCatalog()
-
-useSeoMeta({
-  title: () => {
-    const movie = localizedMovies.value.find((item) => item.id === route.params.id)
-    return movie ? `${movie.title} | ${t('moviesPage.seoTitle')}` : t('moviesPage.seoTitle')
-  },
-})
-
 const movieId = computed(() => {
   return typeof route.params.id === 'string' ? route.params.id : ''
 })
-
-const movie = computed(() =>
-  localizedMovies.value.find((item) => item.id === movieId.value) ?? null,
-)
-
-const movieShowtimes = computed(() =>
-  localizedShowtimes.value.filter((showtime) => showtime.movieId === movieId.value),
-)
-
 const {
-  data: pageState,
-  error: pageError,
+  movie,
+  showtimes,
   status: pageStatus,
-} = await useAsyncData(
-  () => `movie-detail:${movieId.value}:${locale.value}`,
-  async () => {
-    if (!movie.value) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: t('moviesPage.movieNotFound'),
-      })
-    }
+  error: pageError,
+  execute,
+  retry,
+} = useMovieDetail(movieId)
 
-    if (!movie.value.id || !movie.value.title?.trim()) {
-      return { kind: 'malformed-movie' } as const
-    }
-
-    return {
-      kind: 'ready',
-      vm: buildMovieDetailPageVm(movie.value, movieShowtimes.value, locale.value),
-    } as const
+useSeoMeta({
+  title: () => {
+    return movie.value ? `${movie.value.title} | ${t('moviesPage.seoTitle')}` : t('moviesPage.seoTitle')
   },
-  {
-    watch: [movieId, locale],
-  },
-)
+})
 
-if (pageError.value) {
-  throw pageError.value
-}
+const pageState = computed(() => {
+  if (!movie.value) {
+    return null
+  }
+
+  if (!movie.value.id || !movie.value.title?.trim()) {
+    return { kind: 'malformed-movie' } as const
+  }
+
+  return {
+    kind: 'ready',
+    vm: buildMovieDetailPageVm(movie.value, showtimes.value, locale.value),
+  } as const
+})
 
 const bookingRouteExample = computed(() => {
   if (pageState.value?.kind !== 'ready') {
@@ -71,12 +51,20 @@ const bookingRouteExample = computed(() => {
 })
 
 const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
+
+onMounted(async () => {
+  await execute()
+})
+
+watch(movieId, async () => {
+  await execute()
+})
 </script>
 
 <template>
   <div class="space-y-8">
     <section
-      v-if="pageStatus === 'pending'"
+      v-if="pageStatus === 'idle' || pageStatus === 'loading'"
       class="card overflow-hidden p-8"
       aria-busy="true"
       aria-live="polite"
@@ -98,10 +86,19 @@ const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
       </div>
     </section>
 
-    <EmptyState
+    <FullPageErrorState
       v-else-if="pageError"
       title="We could not load this movie"
       description="Try refreshing the page. If the issue persists, return to the movie list and retry."
+      retry-label="Retry"
+      :retry-disabled="false"
+      @retry="retry"
+    />
+
+    <EmptyState
+      v-else-if="pageStatus === 'success' && !movie"
+      :title="t('moviesPage.movieNotFound')"
+      description="Return to the movie list and choose another title."
       action-label="Back to movies"
       action-to="/movies"
     />

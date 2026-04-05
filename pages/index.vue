@@ -1,8 +1,12 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { localizedMovies } = useCatalog()
+const { movies, execute } = useMovies()
 
-const featuredMovies = computed(() => localizedMovies.value.slice(0, 3))
+const featuredMovies = computed(() => movies.value.slice(0, 3))
+
+onMounted(async () => {
+  await execute()
+})
 </script>
 
 <template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { MOCK_SEATS_BY_SHOWTIME } from '~/mocks'
 import { useBookingStore } from '~/stores/booking'
 import {
   buildSeatGridRows,
@@ -14,22 +13,20 @@ import { formatCurrency } from '~/utils/format'
 const route = useRoute()
 const bookingStore = useBookingStore()
 const { locale, t } = useI18n()
-const { localizedShowtimes } = useCatalog()
+const showtimeId = computed(() =>
+  typeof route.params.showtimeId === 'string' ? route.params.showtimeId : '',
+)
+const {
+  showtime,
+  seats,
+  status: seatStatus,
+  error: seatError,
+  execute,
+} = useShowtimeSeats(showtimeId)
 
 const isNavigatingToCheckout = ref(false)
 const interactionMessage = ref('Select an available seat to start your booking.')
 const selectedSeatIds = ref<string[]>([])
-
-const showtime = computed(() =>
-  localizedShowtimes.value.find((item) => item.id === route.params.showtimeId),
-)
-
-if (!showtime.value) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: t('bookingPage.showtimeNotFound'),
-  })
-}
 
 const showtimeStartsAtLabel = computed(() => {
   if (!showtime.value) {
@@ -48,49 +45,8 @@ const showtimeStartsAtLabel = computed(() => {
   }).format(parsed)
 })
 
-const {
-  data: seatState,
-  error: seatError,
-  status: seatStatus,
-} = await useAsyncData(
-  () => `booking-seats:${showtime.value!.id}`,
-  async () => {
-    const records = MOCK_SEATS_BY_SHOWTIME[showtime.value!.id]
-
-    if (!records) {
-      return {
-        kind: 'empty',
-      } as const
-    }
-
-    const normalized = normalizeSeatRecords(records)
-
-    if (!normalized.seats.length && normalized.malformedSeatCount > 0) {
-      return {
-        kind: 'malformed',
-        malformedSeatCount: normalized.malformedSeatCount,
-      } as const
-    }
-
-    if (!normalized.seats.length) {
-      return {
-        kind: 'empty',
-      } as const
-    }
-
-    return {
-      kind: 'ready',
-      normalized,
-    } as const
-  },
-  {
-    watch: [showtime],
-  },
-)
-
-const normalizedSeats = computed(() =>
-  seatState.value?.kind === 'ready' ? seatState.value.normalized.seats : [],
-)
+const normalizedSeatData = computed(() => normalizeSeatRecords(seats.value))
+const normalizedSeats = computed(() => normalizedSeatData.value.seats)
 
 const seatGridRows = computed(() =>
   buildSeatGridRows(normalizedSeats.value, selectedSeatIds.value),
@@ -143,10 +99,9 @@ const handleContinueToCheckout = async () => {
   isNavigatingToCheckout.value = true
 
   try {
-    const draftBooking = bookingStore.startBooking(
+    const draftBooking = await bookingStore.startBooking(
       showtime.value.id,
-      validation.selectedSeats,
-      showtime.value.price,
+      validation.nextSelectedIds,
     )
 
     await navigateTo(buildCheckoutRoute(draftBooking.id))
@@ -160,7 +115,7 @@ const unitPriceLabel = computed(() =>
 )
 
 const malformedSeatCount = computed(() =>
-  seatState.value?.kind === 'ready' ? seatState.value.normalized.malformedSeatCount : 0,
+  normalizedSeatData.value.malformedSeatCount,
 )
 
 const hasAnyAvailableSeat = computed(() =>
@@ -168,21 +123,30 @@ const hasAnyAvailableSeat = computed(() =>
 )
 
 const canContinue = computed(() =>
-  seatState.value?.kind === 'ready' &&
+  Boolean(showtime.value) &&
   selectionSummary.value.canContinue &&
   hasAnyAvailableSeat.value,
 )
+
+onMounted(async () => {
+  await execute()
+})
+
+watch(showtimeId, async () => {
+  selectedSeatIds.value = []
+  await execute()
+})
 </script>
 
 <template>
-  <div v-if="showtime" class="space-y-8">
+  <div class="space-y-8">
     <PageHero
       :title="t('bookingPage.heroTitle')"
       :description="t('bookingPage.heroDescription')"
     />
 
     <section
-      v-if="seatStatus === 'pending'"
+      v-if="seatStatus === 'idle' || seatStatus === 'loading'"
       class="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]"
       aria-busy="true"
       aria-live="polite"
@@ -220,6 +184,14 @@ const canContinue = computed(() =>
     </section>
 
     <EmptyState
+      v-else-if="!showtime && !seatError"
+      title="This showtime is unavailable"
+      description="The selected session could not be found. Return to movies and choose another showtime."
+      action-label="Back to movies"
+      action-to="/movies"
+    />
+
+    <EmptyState
       v-else-if="seatError"
       title="We could not load the seat map"
       description="Refresh the page to retry. If the issue persists, return to the movie detail page and choose the session again."
@@ -228,7 +200,7 @@ const canContinue = computed(() =>
     />
 
     <EmptyState
-      v-else-if="seatState?.kind === 'malformed'"
+      v-else-if="!normalizedSeats.length && malformedSeatCount > 0"
       title="Seat layout is temporarily unavailable"
       description="The seat map data for this session is malformed, so booking cannot continue until it is corrected."
       action-label="Back to movies"
@@ -236,14 +208,14 @@ const canContinue = computed(() =>
     />
 
     <EmptyState
-      v-else-if="seatState?.kind === 'empty'"
+      v-else-if="!normalizedSeats.length"
       title="Seat map not published"
       description="This session does not have a seat layout yet. Choose another showtime or come back later."
       action-label="Back to movies"
       action-to="/movies"
     />
 
-    <section v-else class="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+    <section v-else-if="showtime" class="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
       <div class="space-y-4">
         <div
           v-if="malformedSeatCount"
@@ -279,5 +251,13 @@ const canContinue = computed(() =>
         @continue="handleContinueToCheckout"
       />
     </section>
+
+    <EmptyState
+      v-else
+      title="This showtime is unavailable"
+      description="The selected session could not be prepared for booking. Return to movies and choose another showtime."
+      action-label="Back to movies"
+      action-to="/movies"
+    />
   </div>
 </template>

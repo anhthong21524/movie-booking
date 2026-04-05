@@ -32,17 +32,19 @@ export const createEmptyMovieFormValues = (): AdminMovieFormValues => ({
   releaseDate: '',
   basePrice: '',
   posterUrl: '',
+  status: 'NOW_SHOWING',
 })
 
 export const toMovieFormValues = (movie: Movie): AdminMovieFormValues => ({
   title: movie.title,
   durationMinutes: String(movie.durationMinutes),
   genre: movie.genre,
-  description: movie.description,
+  description: movie.description ?? '',
   rating: movie.rating,
   releaseDate: movie.releaseDate,
   basePrice: String(movie.basePrice),
   posterUrl: movie.posterUrl ?? '',
+  status: movie.status ?? 'NOW_SHOWING',
 })
 
 export const normalizeMovieFormValues = (
@@ -56,6 +58,7 @@ export const normalizeMovieFormValues = (
   releaseDate: values.releaseDate.trim(),
   basePrice: values.basePrice.trim(),
   posterUrl: values.posterUrl.trim(),
+  status: values.status,
 })
 
 export const validateMovieFormValues = (
@@ -134,6 +137,14 @@ export const validateMovieFormValues = (
     }
   }
 
+  if (
+    normalized.status !== 'NOW_SHOWING' &&
+    normalized.status !== 'COMING_SOON' &&
+    normalized.status !== 'ARCHIVED'
+  ) {
+    pushFieldError(errors, 'status', 'Choose a valid movie status.')
+  }
+
   return errors
 }
 
@@ -162,6 +173,7 @@ export const toMoviePayload = (values: AdminMovieFormValues) => {
     releaseDate: normalized.releaseDate,
     basePrice: Number(normalized.basePrice),
     posterUrl: normalized.posterUrl || undefined,
+    status: normalized.status,
   }
 }
 

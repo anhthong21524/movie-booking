@@ -1,42 +1,148 @@
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from '~/mocks'
-import type { Movie, Showtime } from '~/types'
+import type { MaybeRefOrGetter } from 'vue'
+import type { Movie, Seat, Showtime } from '~/types'
 
-export const useCatalog = () => {
-  const { tm } = useI18n()
+interface MoviesResponse {
+  items: Movie[]
+  page: number
+  size: number
+  totalItems: number
+  totalPages: number
+}
 
-  const localizeMovie = (movie: Movie): Movie => {
-    const localized = tm<
-      Partial<Pick<Movie, 'title' | 'description' | 'genre'>>
-    >(`catalog.movies.${movie.id}`)
+interface ShowtimesResponse {
+  items: Showtime[]
+}
 
-    return {
-      ...movie,
-      title: localized?.title ?? movie.title,
-      description: localized?.description ?? movie.description,
-      genre: localized?.genre ?? movie.genre,
-    }
-  }
+interface ShowtimeSeatsResponse {
+  showtimeId: string
+  capacity: number
+  remainingSeats: number
+  seats: Seat[]
+}
 
-  const localizeShowtime = (showtime: Showtime): Showtime => {
-    const localized = tm<Partial<Pick<Showtime, 'roomName'>>>(
-      `catalog.showtimes.${showtime.id}`,
-    )
+export const useMovies = () => {
+  const { request } = useApi()
 
-    return {
-      ...showtime,
-      roomName: localized?.roomName ?? showtime.roomName,
-    }
-  }
-
-  const localizedMovies = computed(() => MOCK_MOVIES.map(localizeMovie))
-  const localizedShowtimes = computed(() =>
-    MOCK_SHOWTIMES.map(localizeShowtime),
+  const {
+    data,
+    status,
+    error,
+    execute,
+    retry,
+  } = useRetryableRequest(() =>
+    request<MoviesResponse>('/api/v1/movies', {
+      query: {
+        status: 'NOW_SHOWING',
+        size: 100,
+      },
+    }),
   )
 
+  const movies = computed(() => data.value?.items ?? [])
+
   return {
-    localizedMovies,
-    localizedShowtimes,
-    localizeMovie,
-    localizeShowtime,
+    movies,
+    status,
+    error,
+    execute,
+    retry,
+  }
+}
+
+export const useMovieDetail = (movieId: MaybeRefOrGetter<string>) => {
+  const { request } = useApi()
+
+  const {
+    data,
+    status,
+    error,
+    execute,
+    retry,
+  } = useRetryableRequest(async () => {
+    const resolvedMovieId = toValue(movieId)
+
+    if (!resolvedMovieId) {
+      return {
+        movie: null,
+        showtimes: [],
+      }
+    }
+
+    const [movie, showtimesResponse] = await Promise.all([
+      request<Movie>(`/api/v1/movies/${resolvedMovieId}`),
+      request<ShowtimesResponse>('/api/v1/showtimes', {
+        query: {
+          movieId: resolvedMovieId,
+        },
+      }),
+    ])
+
+    return {
+      movie,
+      showtimes: showtimesResponse.items ?? [],
+    }
+  })
+
+  const movie = computed(() => data.value?.movie ?? null)
+  const showtimes = computed(() => data.value?.showtimes ?? [])
+
+  return {
+    movie,
+    showtimes,
+    status,
+    error,
+    execute,
+    retry,
+  }
+}
+
+export const useShowtimeSeats = (showtimeId: MaybeRefOrGetter<string>) => {
+  const { request } = useApi()
+
+  const {
+    data,
+    status,
+    error,
+    execute,
+    retry,
+  } = useRetryableRequest(async () => {
+    const resolvedShowtimeId = toValue(showtimeId)
+
+    if (!resolvedShowtimeId) {
+      return {
+        showtime: null,
+        seats: [],
+        capacity: 0,
+        remainingSeats: 0,
+      }
+    }
+
+    const [showtime, seatsResponse] = await Promise.all([
+      request<Showtime>(`/api/v1/showtimes/${resolvedShowtimeId}`),
+      request<ShowtimeSeatsResponse>(`/api/v1/showtimes/${resolvedShowtimeId}/seats`),
+    ])
+
+    return {
+      showtime,
+      seats: seatsResponse.seats ?? [],
+      capacity: seatsResponse.capacity ?? 0,
+      remainingSeats: seatsResponse.remainingSeats ?? 0,
+    }
+  })
+
+  const showtime = computed(() => data.value?.showtime ?? null)
+  const seats = computed(() => data.value?.seats ?? [])
+  const capacity = computed(() => data.value?.capacity ?? 0)
+  const remainingSeats = computed(() => data.value?.remainingSeats ?? 0)
+
+  return {
+    showtime,
+    seats,
+    capacity,
+    remainingSeats,
+    status,
+    error,
+    execute,
+    retry,
   }
 }

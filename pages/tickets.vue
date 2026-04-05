@@ -1,21 +1,46 @@
 <script setup lang="ts">
 import { useBookingStore } from '~/stores/booking'
 import type { TicketHistoryState } from '~/types/tickets'
+import type { Movie, Showtime } from '~/types'
 import { getTicketsEmptyState } from '~/utils/empty-state'
 import { buildTicketHistoryState } from '~/utils/tickets'
 
 const { locale, t } = useI18n()
-const { localizedMovies, localizedShowtimes } = useCatalog()
 const bookingStore = useBookingStore()
 const { getMessage } = useApiError()
+const { request } = useApi()
 
 const loadTicketHistory = async (): Promise<TicketHistoryState> => {
   bookingStore.hydrateBooking()
 
+  if (!bookingStore.bookingHistory.length) {
+    return buildTicketHistoryState({
+      bookings: [],
+      movies: [],
+      showtimes: [],
+      locale: locale.value,
+    })
+  }
+
+  const uniqueShowtimeIds = Array.from(
+    new Set(bookingStore.bookingHistory.map((booking) => booking.showtimeId)),
+  )
+  const showtimes = await Promise.all(
+    uniqueShowtimeIds.map((showtimeId) =>
+      request<Showtime>(`/api/v1/showtimes/${showtimeId}`),
+    ),
+  )
+  const uniqueMovieIds = Array.from(
+    new Set(showtimes.map((showtime) => showtime.movieId)),
+  )
+  const movies = await Promise.all(
+    uniqueMovieIds.map((movieId) => request<Movie>(`/api/v1/movies/${movieId}`)),
+  )
+
   return buildTicketHistoryState({
     bookings: bookingStore.bookingHistory,
-    movies: localizedMovies.value,
-    showtimes: localizedShowtimes.value,
+    movies,
+    showtimes,
     locale: locale.value,
   })
 }

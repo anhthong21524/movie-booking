@@ -1,5 +1,6 @@
 import type { Booking, Seat } from '~/types'
 import type { RawTicketBookingDto } from '~/types/tickets'
+import { apiService } from '~/services/api'
 
 const BOOKING_STORAGE_KEY = 'movie-booking:draft'
 const BOOKING_HISTORY_STORAGE_KEY = 'movie-booking:history'
@@ -124,17 +125,6 @@ export const useBookingStore = defineStore('booking', () => {
     hasHydrated.value = true
   }
 
-  const createDraftBookingId = (showtimeId: string) => {
-    if (
-      typeof crypto !== 'undefined' &&
-      typeof crypto.randomUUID === 'function'
-    ) {
-      return `draft-${showtimeId}-${crypto.randomUUID()}`
-    }
-
-    return `draft-${showtimeId}-${Date.now()}`
-  }
-
   const replaceBooking = (nextBooking: Booking) => {
     booking.value = nextBooking
     persistBooking()
@@ -149,17 +139,23 @@ export const useBookingStore = defineStore('booking', () => {
     persistBookingHistory()
   }
 
-  const startBooking = (showtimeId: string, seats: Seat[], unitPrice: number) => {
-    return replaceBooking({
-      id: createDraftBookingId(showtimeId),
-      showtimeId,
-      seatIds: seats.map((seat) => seat.id),
-      seats,
-      unitPrice,
-      status: 'PENDING',
-      totalAmount: seats.length * unitPrice,
-      createdAt: new Date().toISOString(),
+  const startBooking = async (showtimeId: string, seatIds: string[]) => {
+    const result = await apiService.request<Booking>('/api/v1/bookings', {
+      method: 'POST',
+      body: { showtimeId, seatIds },
     })
+    replaceBooking(result)
+    return result
+  }
+
+  const setBooking = (nextBooking: Booking) => {
+    replaceBooking(nextBooking)
+
+    if (nextBooking.status === 'CONFIRMED') {
+      upsertHistoryBooking(nextBooking)
+    }
+
+    return booking.value
   }
 
   const confirmBooking = (payload: {
@@ -220,6 +216,7 @@ export const useBookingStore = defineStore('booking', () => {
     totalAmount,
     hydrateBooking,
     startBooking,
+    setBooking,
     confirmBooking,
     clearBooking,
   }

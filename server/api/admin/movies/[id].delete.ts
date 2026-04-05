@@ -1,9 +1,8 @@
-import type { AdminMovieDeleteResponse } from '~/types/admin-movie'
 import { requireServerRole } from '~/server/utils/auth-session'
 import { deleteAdminMovie } from '~/server/utils/admin-movies'
 
 export default defineEventHandler(
-  async (event): Promise<AdminMovieDeleteResponse> => {
+  async (event): Promise<void> => {
     await requireServerRole(event, 'ADMIN')
 
     const id = getRouterParam(event, 'id')
@@ -22,11 +21,6 @@ export default defineEventHandler(
         statusCode: 404,
         statusMessage: 'Movie not found.',
       })
-    }
-
-    return {
-      id,
-      message: 'Movie deleted successfully.',
     }
   },
 )
