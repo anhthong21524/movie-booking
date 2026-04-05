@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import {
-  AUTH_EMAIL_PATTERN,
   DEFAULT_AUTH_REDIRECT,
   REDIRECT_QUERY_KEY,
   REGISTER_PATH,
   REGISTER_SUCCESS_QUERY_KEY,
 } from '~/constants/auth'
-import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 import type { CredentialsSignInBody } from '~/types/auth'
+import type { AuthServerErrorVm, LoginFormField } from '~/types/auth-validation'
+import { normalizeLoginServerError } from '~/utils/auth-error-messages'
+import {
+  getAuthValidationMessages,
+  getFirstAuthFieldError,
+  hasAuthFieldErrors,
+  normalizeAuthEmail,
+  validateLoginFields,
+} from '~/utils/auth-validation'
+import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 
 const route = useRoute()
 const { getProviders, signIn } = useAuth()
@@ -22,30 +30,42 @@ const form = reactive<CredentialsSignInBody>({
   password: '',
 })
 
+const touched = reactive<Record<LoginFormField, boolean>>({
+  email: false,
+  password: false,
+})
+const dirty = reactive<Record<LoginFormField, boolean>>({
+  email: false,
+  password: false,
+})
+
+const submitState = ref<
+  'pristine' | 'submitting' | 'submit_failed' | 'submit_succeeded'
+>('pristine')
 const isSubmitting = ref(false)
 const isGoogleSubmitting = ref(false)
-const errorMessage = ref('')
 const providers = ref<Record<string, unknown> | null>(null)
+const serverError = ref<AuthServerErrorVm<LoginFormField> | null>(null)
+
+const validationMessages = computed(() => {
+  return getAuthValidationMessages(locale.value)
+})
 
 const copy = computed(() => {
   if (locale.value === 'vi') {
     return {
-      eyebrow: 'Tài khoản',
-      title: 'Đăng nhập để tiếp tục đặt vé',
+      eyebrow: 'Tai khoan',
+      title: 'Dang nhap de tiep tuc dat ve',
       description:
-        'Sử dụng email và mật khẩu hoặc Google để tiếp tục tới phiên đặt vé của bạn.',
+        'Su dung email va mat khau hoac Google de quay lai luong dat ve cua ban.',
       emailLabel: 'Email',
-      passwordLabel: 'Mật khẩu',
-      submit: 'Đăng nhập',
-      google: 'Tiếp tục với Google',
-      googleUnavailable: 'Google sign-in chưa được cấu hình.',
-      noAccount: 'Chưa có tài khoản?',
-      register: 'Tạo tài khoản',
-      required: 'Email và mật khẩu là bắt buộc.',
-      invalidEmail: 'Vui lòng nhập đúng định dạng email.',
-      invalidCredentials: 'Email hoặc mật khẩu không hợp lệ.',
-      genericError: 'Không thể đăng nhập. Vui lòng thử lại.',
-      registeredSuccess: 'Đăng ký thành công. Bạn có thể đăng nhập ngay bây giờ.',
+      passwordLabel: 'Mat khau',
+      submit: 'Dang nhap',
+      google: 'Tiep tuc voi Google',
+      noAccount: 'Chua co tai khoan?',
+      register: 'Tao tai khoan',
+      registeredSuccess:
+        'Dang ky thanh cong. Ban co the dang nhap ngay bay gio.',
     }
   }
 
@@ -58,19 +78,17 @@ const copy = computed(() => {
     passwordLabel: 'Password',
     submit: 'Login',
     google: 'Continue with Google',
-    googleUnavailable: 'Google sign-in is not configured yet.',
     noAccount: "Don't have an account?",
     register: 'Create one',
-    required: 'Email and password are required.',
-    invalidEmail: 'Please enter a valid email address.',
-    invalidCredentials: 'Invalid email or password.',
-    genericError: 'Unable to sign in right now. Please try again.',
     registeredSuccess: 'Registration successful. You can sign in now.',
   }
 })
 
 const redirectTarget = computed(() => {
-  return sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) || DEFAULT_AUTH_REDIRECT
+  return (
+    sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) ||
+    DEFAULT_AUTH_REDIRECT
+  )
 })
 
 const successMessage = computed(() => {
@@ -94,60 +112,105 @@ const registerLink = computed(() => {
 
 const hasGoogleProvider = computed(() => Boolean(providers.value?.google))
 
+const clientFieldErrors = computed(() => {
+  return validateLoginFields(form, locale.value)
+})
+
+const hasSubmitted = computed(() => submitState.value !== 'pristine')
+
+const markFieldTouched = (field: LoginFormField) => {
+  touched[field] = true
+}
+
+const markAllTouched = () => {
+  touched.email = true
+  touched.password = true
+}
+
+const clearServerError = () => {
+  if (serverError.value) {
+    serverError.value = null
+  }
+}
+
+const handleFieldInput = (field: LoginFormField) => {
+  dirty[field] = true
+  clearServerError()
+}
+
+const getVisibleFieldError = (field: LoginFormField) => {
+  if (!touched[field] && !hasSubmitted.value) {
+    return ''
+  }
+
+  return getFirstAuthFieldError(clientFieldErrors.value, field)
+}
+
+const isFieldInvalid = (field: LoginFormField) => {
+  return Boolean(getVisibleFieldError(field))
+}
+
+const getFieldInputClass = (field: LoginFormField) => {
+  return [
+    'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition',
+    isFieldInvalid(field)
+      ? 'border-rose-300 focus:border-rose-400'
+      : 'border-border focus:border-primary-400',
+  ]
+}
+
 onMounted(async () => {
   providers.value = await getProviders()
 })
 
-const validateCredentials = () => {
-  if (!form.email.trim() || !form.password) {
-    return copy.value.required
-  }
-
-  if (!AUTH_EMAIL_PATTERN.test(form.email.trim())) {
-    return copy.value.invalidEmail
-  }
-
-  return ''
-}
-
 const handleCredentialsLogin = async () => {
-  errorMessage.value = ''
+  clearServerError()
+  markAllTouched()
 
-  const validationMessage = validateCredentials()
-
-  if (validationMessage) {
-    errorMessage.value = validationMessage
+  if (hasAuthFieldErrors(clientFieldErrors.value)) {
+    submitState.value = 'submit_failed'
     return
   }
 
+  submitState.value = 'submitting'
   isSubmitting.value = true
 
   try {
     const result = await signIn('credentials', {
-      email: form.email.trim(),
+      email: normalizeAuthEmail(form.email),
       password: form.password,
       callbackUrl: redirectTarget.value,
       redirect: false,
     })
 
     if (result?.error) {
-      errorMessage.value = copy.value.invalidCredentials
+      submitState.value = 'submit_failed'
+      serverError.value = normalizeLoginServerError(result.error, locale.value)
       return
     }
 
+    submitState.value = 'submit_succeeded'
     await navigateTo(result?.url || redirectTarget.value)
-  } catch {
-    errorMessage.value = copy.value.genericError
+  } catch (error) {
+    submitState.value = 'submit_failed'
+    serverError.value = normalizeLoginServerError(error, locale.value)
   } finally {
     isSubmitting.value = false
   }
 }
 
 const handleGoogleLogin = async () => {
-  errorMessage.value = ''
+  clearServerError()
 
   if (!hasGoogleProvider.value) {
-    errorMessage.value = copy.value.googleUnavailable
+    submitState.value = 'submit_failed'
+    serverError.value = {
+      title: validationMessages.value.authFailureTitle,
+      description: validationMessages.value.googleUnavailable,
+      fieldErrors: {},
+      retryable: false,
+      retryLabel: validationMessages.value.retryLabel,
+    }
     return
   }
 
@@ -157,8 +220,9 @@ const handleGoogleLogin = async () => {
     await signIn('google', {
       callbackUrl: redirectTarget.value,
     })
-  } catch {
-    errorMessage.value = copy.value.genericError
+  } catch (error) {
+    submitState.value = 'submit_failed'
+    serverError.value = normalizeLoginServerError(error, locale.value)
     isGoogleSubmitting.value = false
   }
 }
@@ -183,22 +247,36 @@ const handleGoogleLogin = async () => {
         </div>
 
         <div class="p-8">
-          <div v-if="successMessage" class="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">
+          <div
+            v-if="successMessage"
+            class="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700"
+          >
             {{ successMessage }}
           </div>
 
-          <div v-if="errorMessage" class="mt-4 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">
-            {{ errorMessage }}
-          </div>
+          <FormErrorBanner
+            v-if="serverError"
+            class="mt-4"
+            :title="serverError.title"
+            :description="serverError.description"
+          />
 
-          <form class="mt-6 space-y-5" @submit.prevent="handleCredentialsLogin">
+          <form class="mt-6 space-y-5" novalidate @submit.prevent="handleCredentialsLogin">
             <label class="block space-y-2">
               <span class="text-sm font-medium text-slate-700">{{ copy.emailLabel }}</span>
               <input
                 v-model="form.email"
                 type="email"
                 autocomplete="email"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('email')"
+                :aria-invalid="isFieldInvalid('email')"
+                :aria-describedby="getVisibleFieldError('email') ? 'login-email-error' : undefined"
+                @input="handleFieldInput('email')"
+                @blur="markFieldTouched('email')"
+              />
+              <FieldErrorText
+                id="login-email-error"
+                :message="getVisibleFieldError('email')"
               />
             </label>
 
@@ -208,7 +286,17 @@ const handleGoogleLogin = async () => {
                 v-model="form.password"
                 type="password"
                 autocomplete="current-password"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('password')"
+                :aria-invalid="isFieldInvalid('password')"
+                :aria-describedby="
+                  getVisibleFieldError('password') ? 'login-password-error' : undefined
+                "
+                @input="handleFieldInput('password')"
+                @blur="markFieldTouched('password')"
+              />
+              <FieldErrorText
+                id="login-password-error"
+                :message="getVisibleFieldError('password')"
               />
             </label>
 
