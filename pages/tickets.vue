@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useBookingStore } from '~/stores/booking'
 import type { TicketHistoryState } from '~/types/tickets'
+import { getTicketsEmptyState } from '~/utils/empty-state'
 import { buildTicketHistoryState } from '~/utils/tickets'
 
 const { locale, t } = useI18n()
@@ -31,6 +32,7 @@ const {
 const pageErrorMessage = computed(() =>
   pageError.value ? getMessage(pageError.value, 'page') : null,
 )
+const ticketsEmptyState = computed(() => getTicketsEmptyState(locale.value))
 
 onMounted(async () => {
   await execute()
@@ -79,7 +81,7 @@ onMounted(async () => {
       @retry="retry"
     />
 
-    <EmptyState
+    <PageEmptyState
       v-else-if="ticketHistoryState?.kind === 'malformed'"
       title="Booking history is temporarily unavailable"
       description="All saved bookings were malformed or linked to invalid showtimes, so tickets could not be rendered safely."
@@ -87,12 +89,13 @@ onMounted(async () => {
       action-to="/movies"
     />
 
-    <EmptyState
+    <PageEmptyState
       v-else-if="ticketHistoryState?.kind === 'empty'"
-      :title="t('ticketsPage.emptyTitle')"
-      :description="t('ticketsPage.emptyDescription')"
-      :action-label="t('ticketsPage.action')"
-      action-to="/movies"
+      :title="ticketsEmptyState.title"
+      :description="ticketsEmptyState.description"
+      :icon="ticketsEmptyState.icon"
+      :action-label="ticketsEmptyState.actionLabel"
+      :action-to="ticketsEmptyState.actionTo"
     />
 
     <section v-else-if="ticketHistoryState?.kind === 'ready'" class="space-y-5">

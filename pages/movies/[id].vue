@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { buildMovieDetailPageVm } from '~/utils/movie-detail'
+import { getShowtimesEmptyState } from '~/utils/empty-state'
 import { buildBookingRoute } from '~/utils/routes'
 
 const route = useRoute()
@@ -68,6 +69,8 @@ const bookingRouteExample = computed(() => {
 
   return firstAvailable ? buildBookingRoute(firstAvailable.id) : ''
 })
+
+const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
 </script>
 
 <template>
@@ -194,10 +197,13 @@ const bookingRouteExample = computed(() => {
           }}
         </div>
 
-        <EmptyState
+        <SectionEmptyState
           v-if="!pageState.vm.showtimeGroups.length"
-          :title="t('moviesPage.noShowtimesTitle')"
-          :description="t('moviesPage.noShowtimesDescription')"
+          :title="showtimesEmptyState.title"
+          :description="showtimesEmptyState.description"
+          :icon="showtimesEmptyState.icon"
+          :action-label="showtimesEmptyState.actionLabel"
+          :action-to="showtimesEmptyState.actionTo"
         />
 
         <template v-else>
