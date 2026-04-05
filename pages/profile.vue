@@ -34,15 +34,6 @@ const totalSpendLabel = computed(() =>
   new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(totalSpend.value),
 )
 
-const sessionExpiresLabel = computed(() => {
-  if (!userStore.expiresAt) return null
-  const d = new Date(userStore.expiresAt)
-  if (Number.isNaN(d.getTime())) return null
-  return new Intl.DateTimeFormat(locale.value, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(d)
-})
 </script>
 
 <template>
@@ -84,34 +75,6 @@ const sessionExpiresLabel = computed(() => {
             </span>
           </div>
 
-          <div class="mt-6 space-y-3 border-t border-border pt-5">
-            <!-- ID -->
-            <div class="flex items-center justify-between gap-3">
-              <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <circle cx="8" cy="12" r="2" />
-                  <path d="M14 9h4M14 12h4M14 15h2" />
-                </svg>
-                User ID
-              </span>
-              <code class="rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                #{{ profile?.id || '—' }}
-              </code>
-            </div>
-
-            <!-- Session expiry -->
-            <div v-if="sessionExpiresLabel" class="flex items-start justify-between gap-3">
-              <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                Session ends
-              </span>
-              <span class="text-right text-xs font-medium text-slate-600">{{ sessionExpiresLabel }}</span>
-            </div>
-          </div>
         </div>
 
         <!-- Quick links -->
