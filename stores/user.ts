@@ -1,13 +1,9 @@
 import type {
   AuthSessionSnapshot,
   AuthSessionUser,
-  AuthRole,
   AuthStatus,
 } from '~/types/auth'
-
-const normalizeRole = (role: unknown): AuthRole => {
-  return role === 'ADMIN' ? 'ADMIN' : 'USER'
-}
+import { isAdminRole, normalizeAuthRole } from '~/utils/authz'
 
 const normalizeSessionUser = (
   user: Partial<AuthSessionUser> | null | undefined,
@@ -20,7 +16,7 @@ const normalizeSessionUser = (
     id: user.id,
     name: typeof user.name === 'string' ? user.name : '',
     email: typeof user.email === 'string' ? user.email : '',
-    role: normalizeRole(user.role),
+    role: normalizeAuthRole(user.role),
   }
 }
 
@@ -32,7 +28,7 @@ export const useUserStore = defineStore('user', () => {
 
   const isResolved = computed(() => status.value !== 'loading')
   const isAuthenticated = computed(() => status.value === 'authenticated')
-  const isAdmin = computed(() => profile.value?.role === 'ADMIN')
+  const isAdmin = computed(() => isAdminRole(profile.value?.role))
 
   const setUser = (user: AuthSessionUser, nextExpiresAt?: string | null) => {
     profile.value = user
