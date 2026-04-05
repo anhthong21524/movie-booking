@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Movie } from '~/types'
+import { getMoviesEmptyState } from '~/utils/empty-state'
 
-const { t } = useI18n()
+const { locale, t } = useI18n()
 const { localizedMovies } = useCatalog()
 const { getMessage } = useApiError()
 
@@ -26,7 +27,8 @@ const pageErrorMessage = computed(() =>
   pageError.value ? getMessage(pageError.value, 'page') : null,
 )
 
-const hasContent = computed(() => Boolean(movies.value?.length))
+const moviesEmptyState = computed(() => getMoviesEmptyState(locale.value))
+const hasContent = computed(() => Array.isArray(movies.value) && movies.value.length > 0)
 
 onMounted(async () => {
   await execute()
@@ -51,12 +53,13 @@ onMounted(async () => {
       @retry="retry"
     />
 
-    <EmptyState
+    <PageEmptyState
       v-else-if="!hasContent"
-      :title="t('moviesPage.noShowtimesTitle')"
-      description="Movies will appear here as soon as the catalog is available."
-      action-label="Refresh movies"
-      action-to="/movies"
+      :title="moviesEmptyState.title"
+      :description="moviesEmptyState.description"
+      :icon="moviesEmptyState.icon"
+      :action-label="moviesEmptyState.actionLabel"
+      :action-to="moviesEmptyState.actionTo"
     />
 
     <section v-else class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
