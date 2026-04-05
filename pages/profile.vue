@@ -5,7 +5,6 @@ definePageMeta({ middleware: 'auth' })
 
 const userStore = useUserStore()
 const bookingStore = useBookingStore()
-const appAuth = useAppAuth()
 const { locale } = useI18n()
 
 const profile = computed(() => userStore.profile)
@@ -44,13 +43,6 @@ const sessionExpiresLabel = computed(() => {
     timeStyle: 'short',
   }).format(d)
 })
-
-const isLoggingOut = computed(() => userStore.status === 'logging_out')
-
-const handleLogout = async () => {
-  await appAuth.logout()
-  await navigateTo('/movies')
-}
 </script>
 
 <template>
@@ -120,20 +112,6 @@ const handleLogout = async () => {
               <span class="text-right text-xs font-medium text-slate-600">{{ sessionExpiresLabel }}</span>
             </div>
           </div>
-
-          <!-- Logout -->
-          <button
-            class="btn-secondary mt-5 w-full"
-            :disabled="isLoggingOut"
-            @click="handleLogout"
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            {{ isLoggingOut ? 'Signing out…' : 'Sign out' }}
-          </button>
         </div>
 
         <!-- Quick links -->
