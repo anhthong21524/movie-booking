@@ -179,10 +179,6 @@ const totalSpendLabel = computed(() =>
             </span>
           </div>
 
-          <div class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
-            <span class="text-sm font-medium text-slate-500">User ID</span>
-            <code class="text-xs font-semibold text-slate-600">{{ profile?.id || '—' }}</code>
-          </div>
         </div>
       </div>
     </div>
