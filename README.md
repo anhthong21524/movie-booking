@@ -97,6 +97,9 @@ npm run typecheck
 Branching, pull request rules, and release flow are documented in
 [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
+End-user guidance for the current application flows is documented in
+[`USER_GUIDE.md`](./USER_GUIDE.md).
+
 ## Environment Variables
 
 Create a `.env` file from `.env.example` if needed.
