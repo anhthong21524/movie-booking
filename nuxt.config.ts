@@ -33,9 +33,10 @@ export default defineNuxtConfig({
     typeCheck: 'build',
   },
   runtimeConfig: {
+    apiProxyTarget:
+      process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8080',
     public: {
-      apiBaseUrl:
-        process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.example.com',
+      apiBaseUrl: '',
     },
   },
   app: {

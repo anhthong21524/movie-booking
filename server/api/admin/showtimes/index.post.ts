@@ -58,8 +58,5 @@ export default defineEventHandler(async (event): Promise<AdminShowtimeMutationRe
     price: validation.draft.price,
   })
 
-  return {
-    item: createdShowtime,
-    message: 'Showtime created successfully.',
-  }
+  return createdShowtime
 })

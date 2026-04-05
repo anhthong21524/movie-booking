@@ -1,137 +1,141 @@
 <script setup lang="ts">
-import { MOCK_SEATS_BY_SHOWTIME } from '~/mocks'
+import type { Booking, Movie, Showtime } from '~/types'
 import { useBookingStore } from '~/stores/booking'
-import { buildCheckoutSummaryVm, validateCheckoutBooking } from '~/utils/checkout'
+import { buildCheckoutSummaryVm, calculateBookingPricing } from '~/utils/checkout'
 import { buildBookingRoute } from '~/utils/routes'
 
 const bookingStore = useBookingStore()
 const { locale, t } = useI18n()
 const route = useRoute()
-const { localizedMovies, localizedShowtimes } = useCatalog()
+const { request } = useApi()
+const { getMessage } = useApiError()
 
 const submitState = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
 const submitMessage = ref('Review your booking details before you confirm.')
-const isCheckoutReady = ref(Boolean(bookingStore.booking))
 
 const bookingId = computed(() =>
   typeof route.params.bookingId === 'string' ? route.params.bookingId : '',
 )
 
-const bookingDraft = computed(() => bookingStore.booking)
+const loadCheckout = async (): Promise<{
+  booking: Booking | null
+  showtime: Showtime | null
+  movie: Movie | null
+}> => {
+  bookingStore.hydrateBooking()
 
-const showtime = computed(() => {
-  if (!bookingDraft.value) {
-    return null
+  if (!bookingId.value) {
+    return {
+      booking: null,
+      showtime: null,
+      movie: null,
+    }
   }
 
-  return (
-    localizedShowtimes.value.find((item) => item.id === bookingDraft.value?.showtimeId) ??
-    null
-  )
-})
+  const cachedBooking =
+    bookingStore.booking?.id === bookingId.value ? bookingStore.booking : null
+  const booking =
+    cachedBooking ??
+    await request<Booking>(`/api/v1/bookings/${bookingId.value}`)
 
-const movie = computed(() => {
-  if (!showtime.value) {
-    return null
+  const showtime = await request<Showtime>(`/api/v1/showtimes/${booking.showtimeId}`)
+  const movie = await request<Movie>(`/api/v1/movies/${showtime.movieId}`)
+
+  return {
+    booking,
+    showtime,
+    movie,
   }
+}
 
-  return localizedMovies.value.find((item) => item.id === showtime.value?.movieId) ?? null
-})
+const {
+  data: checkoutData,
+  error: pageError,
+  status: pageStatus,
+  execute,
+  retry,
+} = useRetryableRequest(loadCheckout)
 
-const validation = computed(() =>
-  validateCheckoutBooking({
-    bookingId: bookingId.value,
-    booking: bookingDraft.value,
-    showtime: showtime.value,
-    seatRecords: bookingDraft.value
-      ? MOCK_SEATS_BY_SHOWTIME[bookingDraft.value.showtimeId]
-      : undefined,
-  }),
+const pageErrorMessage = computed(() =>
+  pageError.value ? getMessage(pageError.value, 'page') : null,
 )
 
+const booking = computed(() => checkoutData.value?.booking ?? null)
+const showtime = computed(() => checkoutData.value?.showtime ?? null)
+const movie = computed(() => checkoutData.value?.movie ?? null)
+
 const summary = computed(() => {
-  if (!validation.value.valid || !validation.value.booking || !validation.value.pricing || !showtime.value) {
+  if (!booking.value || !showtime.value) {
     return null
   }
 
   return buildCheckoutSummaryVm({
-    booking: validation.value.booking,
+    booking: booking.value,
     showtime: showtime.value,
     movie: movie.value,
-    selectedSeats: validation.value.selectedSeats,
-    pricing: validation.value.pricing,
+    selectedSeats: booking.value.seats,
+    pricing: calculateBookingPricing(booking.value.unitPrice, booking.value.seats.length),
     locale: locale.value,
   })
 })
 
 const backToSeatsRoute = computed(() => {
-  if (bookingDraft.value?.showtimeId) {
-    return buildBookingRoute(bookingDraft.value.showtimeId)
+  if (booking.value?.showtimeId) {
+    return buildBookingRoute(booking.value.showtimeId)
   }
 
   return '/movies'
 })
 
 const confirmDisabled = computed(() => {
-  return !summary.value || !validation.value.valid || bookingDraft.value?.status === 'CONFIRMED'
-})
-
-onMounted(() => {
-  bookingStore.hydrateBooking()
-  isCheckoutReady.value = true
+  return !summary.value || !booking.value || booking.value.status === 'CONFIRMED'
 })
 
 watch(
-  [validation, bookingDraft],
-  ([nextValidation, nextBooking]) => {
-    if (submitState.value === 'submitting' || submitState.value === 'success') {
-      return
-    }
-
-    if (nextBooking?.status === 'CONFIRMED' && nextValidation.valid) {
-      submitState.value = 'success'
-      submitMessage.value = 'Booking confirmed. Your summary is locked to the validated draft.'
-      return
-    }
-
-    if (!nextValidation.valid) {
+  booking,
+  (nextBooking) => {
+    if (!nextBooking) {
       submitState.value = 'error'
-      submitMessage.value = nextValidation.message
+      submitMessage.value = 'No booking draft was found. Return to seat selection and choose your seats again.'
       return
     }
 
-    submitState.value = 'idle'
-    submitMessage.value = 'Review your booking details before you confirm.'
+    if (nextBooking.status === 'CONFIRMED') {
+      submitState.value = 'success'
+      submitMessage.value = 'Booking confirmed. You can keep this page open while payment and ticket issuance are added.'
+      return
+    }
+
+    if (submitState.value !== 'submitting') {
+      submitState.value = 'idle'
+      submitMessage.value = 'Review your booking details before you confirm.'
+    }
   },
   { immediate: true },
 )
 
 const handleConfirmBooking = async () => {
-  if (submitState.value === 'submitting' || submitState.value === 'success') {
-    return
-  }
-
-  const nextValidation = validation.value
-
-  if (!nextValidation.valid || !nextValidation.pricing) {
-    submitState.value = 'error'
-    submitMessage.value = nextValidation.message
+  if (!booking.value || submitState.value === 'submitting' || submitState.value === 'success') {
     return
   }
 
   submitState.value = 'submitting'
-  submitMessage.value = 'Revalidating your selected seats and confirming the booking.'
+  submitMessage.value = 'Confirming your booking and locking the selected seats.'
 
   try {
-    const confirmedBooking = bookingStore.confirmBooking({
-      seats: nextValidation.selectedSeats,
-      seatIds: nextValidation.normalizedSeatIds,
-      totalAmount: nextValidation.pricing.total,
-      unitPrice: nextValidation.pricing.unitPrice,
-    })
+    const confirmedBooking = await request<Booking>(
+      `/api/v1/bookings/${booking.value.id}/confirm`,
+      {
+        method: 'PATCH',
+      },
+    )
 
-    if (!confirmedBooking) {
-      throw new Error('Booking draft was not found.')
+    bookingStore.setBooking(confirmedBooking)
+
+    checkoutData.value = {
+      booking: confirmedBooking,
+      showtime: showtime.value,
+      movie: movie.value,
     }
 
     submitState.value = 'success'
@@ -141,6 +145,14 @@ const handleConfirmBooking = async () => {
     submitMessage.value = 'We could not confirm the booking. Please retry or return to seat selection.'
   }
 }
+
+onMounted(async () => {
+  await execute()
+})
+
+watch(bookingId, async () => {
+  await execute()
+})
 </script>
 
 <template>
@@ -151,7 +163,7 @@ const handleConfirmBooking = async () => {
     />
 
     <section
-      v-if="!isCheckoutReady"
+      v-if="pageStatus === 'idle' || pageStatus === 'loading'"
       class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"
       aria-busy="true"
       aria-live="polite"
@@ -179,6 +191,15 @@ const handleConfirmBooking = async () => {
       </div>
     </section>
 
+    <FullPageErrorState
+      v-else-if="pageError && pageErrorMessage"
+      :title="pageErrorMessage.title"
+      :description="pageErrorMessage.description"
+      :retry-label="pageErrorMessage.retryLabel"
+      :retry-disabled="false"
+      @retry="retry"
+    />
+
     <section
       v-else-if="summary"
       class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"
@@ -196,38 +217,11 @@ const handleConfirmBooking = async () => {
     </section>
 
     <EmptyState
-      v-else-if="validation.code === 'missing-booking'"
+      v-else
       :title="t('checkoutPage.noBookingTitle')"
       :description="t('checkoutPage.noBookingDescription')"
       :action-label="t('checkoutPage.goToMovies')"
       action-to="/movies"
     />
-
-    <section
-      v-else
-      class="card p-8"
-    >
-      <div class="mx-auto max-w-2xl text-center">
-        <div
-          class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-2xl text-rose-600"
-        >
-          !
-        </div>
-        <h2 class="mt-6 text-2xl font-bold text-slate-950">
-          Checkout validation failed
-        </h2>
-        <p class="mt-3 text-slate-600">
-          {{ validation.message }}
-        </p>
-        <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <NuxtLink :to="backToSeatsRoute" class="btn-primary">
-            Back to seats
-          </NuxtLink>
-          <NuxtLink to="/movies" class="btn-secondary">
-            Browse movies
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
   </div>
 </template>

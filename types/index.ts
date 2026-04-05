@@ -2,23 +2,26 @@ export type SeatStatus = 'AVAILABLE' | 'HELD' | 'BOOKED'
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED'
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED'
 export type PaymentMethod = 'CARD' | 'EWALLET' | 'BANK_TRANSFER' | 'CASH'
+export type MovieStatus = 'NOW_SHOWING' | 'COMING_SOON' | 'ARCHIVED'
 
 export interface Movie {
   id: string
   title: string
-  description: string
+  description?: string
   durationMinutes: number
   genre: string
   rating: string
   posterUrl?: string
   releaseDate: string
   basePrice: number
+  status?: MovieStatus
 }
 
 export interface Showtime {
   id: string
   movieId: string
   startsAt: string
+  endsAt: string
   roomName: string
   price: number
   capacity?: number

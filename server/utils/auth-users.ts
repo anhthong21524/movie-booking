@@ -1,109 +1,97 @@
-import { randomUUID } from 'node:crypto'
-
 import type {
+  AuthRole,
   AuthSessionUser,
   CredentialsSignInBody,
-  StoredAuthUser,
 } from '~/types/auth'
-import { hashPassword, hashPasswordSync, verifyPassword } from './auth-password'
 
-const normalizeEmail = (email: string) => {
-  return email.trim().toLowerCase()
-}
+const normalizeEmail = (email: string) => email.trim().toLowerCase()
 
-const toAuthSessionUser = (user: StoredAuthUser): AuthSessionUser => {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
+const backendUrl = () =>
+  process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8080'
+
+interface BackendAuthResponse {
+  accessToken: string
+  refreshToken: string
+  user: {
+    id: number
+    email: string
+    role: string
   }
 }
 
-const users: StoredAuthUser[] = [
-  {
-    id: 'user-seed-1',
-    name: 'Movie Fan',
-    email: 'user@moviehub.test',
-    passwordHash: hashPasswordSync('Password123!'),
-    role: 'USER',
-  },
-  {
-    id: 'admin-seed-1',
-    name: 'Cinema Admin',
-    email: 'admin@moviehub.test',
-    passwordHash: hashPasswordSync('Admin123!'),
-    role: 'ADMIN',
-  },
-]
-
-export const emailExists = (email: string) => {
-  return users.some((user) => user.email === normalizeEmail(email))
-}
-
-export const findUserByEmail = (email: string) => {
-  return users.find((user) => user.email === normalizeEmail(email)) ?? null
+interface BackendRegisterResponse {
+  accessToken: string
+  user: {
+    id: number
+    email: string
+    name: string
+    role: string
+  }
 }
 
 export const authenticateUser = async (
   credentials: CredentialsSignInBody,
-): Promise<AuthSessionUser | null> => {
-  const user = findUserByEmail(credentials.email)
+): Promise<(AuthSessionUser & { accessToken: string }) | null> => {
+  try {
+    const data = await $fetch<BackendAuthResponse>(
+      `${backendUrl()}/api/v1/auth/login`,
+      {
+        method: 'POST',
+        body: { email: credentials.email, password: credentials.password },
+      },
+    )
 
-  if (!user || !user.passwordHash) {
+    const nameFromEmail = data.user.email.split('@')[0] ?? 'User'
+
+    return {
+      id: String(data.user.id),
+      name: nameFromEmail,
+      email: data.user.email,
+      role: (data.user.role === 'ADMIN' ? 'ADMIN' : 'USER') as AuthRole,
+      accessToken: data.accessToken,
+    }
+  } catch {
     return null
   }
-
-  const isValidPassword = await verifyPassword(
-    credentials.password,
-    user.passwordHash,
-  )
-
-  if (!isValidPassword) {
-    return null
-  }
-
-  return toAuthSessionUser(user)
 }
 
 export const registerUser = async (input: {
   name: string
   email: string
   password: string
-}): Promise<AuthSessionUser> => {
-  const newUser: StoredAuthUser = {
-    id: randomUUID(),
-    name: input.name.trim(),
-    email: normalizeEmail(input.email),
-    passwordHash: await hashPassword(input.password),
-    role: 'USER',
+}): Promise<AuthSessionUser & { accessToken: string }> => {
+  const data = await $fetch<BackendRegisterResponse>(
+    `${backendUrl()}/api/v1/auth/register`,
+    {
+      method: 'POST',
+      body: {
+        name: input.name.trim(),
+        email: normalizeEmail(input.email),
+        password: input.password,
+      },
+    },
+  )
+
+  return {
+    id: String(data.user.id),
+    name: data.user.name,
+    email: data.user.email,
+    role: (data.user.role === 'ADMIN' ? 'ADMIN' : 'USER') as AuthRole,
+    accessToken: data.accessToken,
   }
-
-  users.push(newUser)
-
-  return toAuthSessionUser(newUser)
 }
 
 export const findOrCreateOAuthUser = async (input: {
   name?: string | null
   email: string
 }): Promise<AuthSessionUser> => {
-  const existingUser = findUserByEmail(input.email)
+  const fallbackName =
+    input.name?.trim() || input.email.split('@')[0] || 'Movie User'
 
-  if (existingUser) {
-    return toAuthSessionUser(existingUser)
-  }
-
-  const fallbackName = input.email.split('@')[0] ?? 'Movie User'
-  const newUser: StoredAuthUser = {
-    id: randomUUID(),
-    name: input.name?.trim() || fallbackName,
+  return {
+    id: normalizeEmail(input.email),
+    name: fallbackName,
     email: normalizeEmail(input.email),
-    passwordHash: '',
-    role: 'USER',
+    role: 'USER' as AuthRole,
   }
-
-  users.push(newUser)
-
-  return toAuthSessionUser(newUser)
 }

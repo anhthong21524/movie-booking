@@ -34,10 +34,13 @@ class ApiService {
     options: ApiRequestOptions,
   ): Promise<TResponse> {
     const config = useRuntimeConfig()
+    const resolvedBaseUrl =
+      options.baseURL ??
+      (path.startsWith('/api/v1/') ? '' : config.public.apiBaseUrl)
 
     try {
       return await $fetch<TResponse>(path, {
-        baseURL: options.baseURL ?? config.public.apiBaseUrl,
+        baseURL: resolvedBaseUrl,
         method: options.method || 'GET',
         query: options.query,
         body: options.body as

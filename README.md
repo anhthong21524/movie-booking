@@ -97,12 +97,15 @@ npm run typecheck
 Branching, pull request rules, and release flow are documented in
 [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
+End-user guidance for the current application flows is documented in
+[`USER_GUIDE.md`](./USER_GUIDE.md).
+
 ## Environment Variables
 
 Create a `.env` file from `.env.example` if needed.
 
 ```env
-NUXT_PUBLIC_API_BASE_URL=https://api.example.com
+NUXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8080
 AUTH_ORIGIN=http://127.0.0.1:3000
 NUXT_AUTH_SECRET=replace-with-a-long-random-secret
 GOOGLE_CLIENT_ID=
@@ -112,6 +115,8 @@ GOOGLE_CLIENT_SECRET=
 Notes:
 
 - `AUTH_ORIGIN` must be the site origin only, for example `http://127.0.0.1:3000`.
+- `NUXT_PUBLIC_API_BASE_URL` should point to the backend app origin in local development, for example `http://127.0.0.1:8080`.
+- The frontend proxies `/api/v1/*` through Nuxt in local development so the browser can stay on the same origin and avoid backend CORS issues.
 - Do not include `/api/auth` in `AUTH_ORIGIN`; `baseURL` is configured separately.
 - `NUXT_AUTH_SECRET` is required for auth session signing.
 - The Google variables are required only when Google OAuth is enabled.

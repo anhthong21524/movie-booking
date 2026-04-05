@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {
-  AdminMovieDeleteResponse,
   AdminMovieFieldErrors,
   AdminMovieFormValues,
   AdminMovieMutationResponse,
@@ -18,7 +17,7 @@ import {
   validateMovieFormValues,
 } from '~/utils/admin-movie-validation'
 
-const { requestLocal } = useApi()
+const { request } = useApi()
 const { normalize, getMessage } = useApiError()
 
 definePageMeta({
@@ -70,7 +69,11 @@ const loadMovies = async () => {
   pageError.value = null
 
   try {
-    const response = await requestLocal<AdminMoviesResponse>('/api/admin/movies')
+    const response = await request<AdminMoviesResponse>('/api/v1/admin/movies', {
+      query: {
+        size: 100,
+      },
+    })
     movies.value = response.items
     pageStatus.value = 'ready'
   } catch (error) {
@@ -117,26 +120,28 @@ const submitMovie = async () => {
   try {
     const payload = toMoviePayload(formValues.value)
     const response = selectedMovieId.value
-      ? await requestLocal<AdminMovieMutationResponse>(
-          `/api/admin/movies/${selectedMovieId.value}`,
+      ? await request<AdminMovieMutationResponse>(
+          `/api/v1/admin/movies/${selectedMovieId.value}`,
           {
             method: 'PATCH',
             body: payload,
           },
         )
-      : await requestLocal<AdminMovieMutationResponse>('/api/admin/movies', {
+      : await request<AdminMovieMutationResponse>('/api/v1/admin/movies', {
           method: 'POST',
           body: payload,
         })
 
-    successMessage.value = response.message
+    successMessage.value = selectedMovieId.value
+      ? 'Movie updated successfully.'
+      : 'Movie created successfully.'
     await loadMovies()
 
     if (selectedMovieId.value) {
-      startEditingMovie(response.item)
+      startEditingMovie(response)
     } else {
       resetForm()
-      successMessage.value = response.message
+      successMessage.value = 'Movie created successfully.'
     }
   } catch (error) {
     actionError.value = normalize(error)
@@ -152,11 +157,16 @@ const uploadPoster = async (payload: PosterUploadPayload) => {
   uploadPending.value = true
 
   try {
-    const response = await requestLocal<PosterUploadResponse>(
-      '/api/admin/movies/upload-poster',
+    const fileResponse = await fetch(payload.dataUrl)
+    const fileBlob = await fileResponse.blob()
+    const formData = new FormData()
+    formData.append('file', fileBlob, payload.fileName)
+
+    const response = await request<PosterUploadResponse>(
+      '/api/v1/admin/movies/upload-poster',
       {
         method: 'POST',
-        body: payload,
+        body: formData,
         timeoutMs: 20000,
       },
     )
@@ -195,8 +205,8 @@ const deleteMovie = async () => {
   successMessage.value = ''
 
   try {
-    const response = await requestLocal<AdminMovieDeleteResponse>(
-      `/api/admin/movies/${deleteTarget.value.id}`,
+    await request<null>(
+      `/api/v1/admin/movies/${deleteTarget.value.id}`,
       {
         method: 'DELETE',
       },
@@ -207,7 +217,7 @@ const deleteMovie = async () => {
     }
 
     deleteTarget.value = null
-    successMessage.value = response.message
+    successMessage.value = 'Movie deleted successfully.'
     await loadMovies()
   } catch (error) {
     actionError.value = normalize(error)

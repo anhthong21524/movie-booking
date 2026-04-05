@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type {
   AdminScheduledShowtime,
-  AdminShowtimeBootstrapResponse,
   AdminShowtimeFieldErrors,
   AdminShowtimeFormValues,
   AdminShowtimeMutationResponse,
@@ -21,7 +20,7 @@ import {
   validateShowtimeFormValues,
 } from '~/utils/admin-showtime-validation'
 
-const { requestLocal } = useApi()
+const { request } = useApi()
 const { normalize, getMessage } = useApiError()
 
 definePageMeta({
@@ -80,10 +79,29 @@ const loadShowtimeData = async () => {
   pageError.value = null
 
   try {
-    const response = await requestLocal<AdminShowtimeBootstrapResponse>('/api/admin/showtimes')
-    movies.value = response.movies
-    cinemas.value = response.cinemas
-    showtimes.value = response.items
+    const [moviesResponse, cinemasResponse, showtimesResponse] = await Promise.all([
+      request<{ items: Movie[] }>('/api/v1/admin/movies', {
+        query: {
+          size: 100,
+        },
+      }),
+      request<{ items: CinemaLocation[] }>('/api/v1/admin/cinemas'),
+      request<{
+        items: AdminScheduledShowtime[]
+        page: number
+        size: number
+        totalItems: number
+        totalPages: number
+      }>('/api/v1/admin/showtimes', {
+        query: {
+          size: 100,
+        },
+      }),
+    ])
+
+    movies.value = moviesResponse.items
+    cinemas.value = cinemasResponse.items
+    showtimes.value = showtimesResponse.items
     pageStatus.value = 'ready'
   } catch (error) {
     pageError.value = normalize(error)
@@ -131,16 +149,16 @@ const submitShowtime = async () => {
   submitPending.value = true
 
   try {
-    const response = await requestLocal<AdminShowtimeMutationResponse>(
-      '/api/admin/showtimes',
+    const response = await request<AdminShowtimeMutationResponse>(
+      '/api/v1/admin/showtimes',
       {
         method: 'POST',
         body: toShowtimePayload(draftEvaluation.value.draft),
       },
     )
 
-    showtimes.value = [response.item, ...showtimes.value]
-    successMessage.value = response.message
+    showtimes.value = [response, ...showtimes.value]
+    successMessage.value = 'Showtime created successfully.'
     formValues.value = createFollowUpShowtimeFormValues(formValues.value)
     fieldErrors.value = {}
   } catch (error) {

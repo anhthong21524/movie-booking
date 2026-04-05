@@ -131,6 +131,9 @@ const authOptions: AuthOptions = {
         token.name = user.name
         token.email = user.email
         token.role = user.role === 'ADMIN' ? 'ADMIN' : 'USER'
+        if (user.accessToken) {
+          token.accessToken = user.accessToken
+        }
       }
 
       return token

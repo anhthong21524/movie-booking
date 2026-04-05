@@ -1,27 +1,13 @@
 <script setup lang="ts">
-import type { Movie } from '~/types'
 import { getMoviesEmptyState } from '~/utils/empty-state'
 
 const { locale, t } = useI18n()
-const { localizedMovies } = useCatalog()
 const { getMessage } = useApiError()
+const { movies, status: pageStatus, error: pageError, execute, retry } = useMovies()
 
 useSeoMeta({
   title: t('moviesPage.seoTitle'),
 })
-
-const loadMovies = async (): Promise<Movie[]> => {
-  return localizedMovies.value
-}
-
-const {
-  data: movies,
-  error: pageError,
-  status: pageStatus,
-  canRetry,
-  execute,
-  retry,
-} = useRetryableRequest(loadMovies)
 
 const pageErrorMessage = computed(() =>
   pageError.value ? getMessage(pageError.value, 'page') : null,
@@ -49,7 +35,7 @@ onMounted(async () => {
       :title="pageErrorMessage.title"
       :description="pageErrorMessage.description"
       :retry-label="pageErrorMessage.retryLabel"
-      :retry-disabled="!canRetry"
+      :retry-disabled="false"
       @retry="retry"
     />
 
