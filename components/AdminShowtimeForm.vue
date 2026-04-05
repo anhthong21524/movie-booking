@@ -89,7 +89,7 @@ const handleSubmit = () => {
 </script>
 
 <template>
-  <section class="card space-y-5">
+  <section class="card space-y-5 p-5 sm:p-6">
     <div>
       <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600">
         Create showtime

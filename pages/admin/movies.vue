@@ -21,6 +21,10 @@ import {
 const { requestLocal } = useApi()
 const { normalize, getMessage } = useApiError()
 
+definePageMeta({
+  layout: 'admin',
+})
+
 useSeoMeta({
   title: 'Admin Movies',
 })
