@@ -167,15 +167,10 @@ const totalSpendLabel = computed(() =>
             <span class="text-sm font-semibold text-slate-900">{{ profile?.email || '—' }}</span>
           </div>
 
-          <div class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
+          <div v-if="userStore.isAdmin" class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
             <span class="text-sm font-medium text-slate-500">Role</span>
-            <span
-              class="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-              :class="userStore.isAdmin
-                ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-200'
-                : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200'"
-            >
-              {{ userStore.isAdmin ? 'Administrator' : 'Member' }}
+            <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 ring-1 ring-primary-200">
+              Administrator
             </span>
           </div>
 
