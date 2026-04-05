@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import {
-  AUTH_EMAIL_PATTERN,
-  AUTH_PASSWORD_MIN_LENGTH,
   DEFAULT_AUTH_REDIRECT,
   LOGIN_PATH,
   REDIRECT_QUERY_KEY,
   REGISTER_SUCCESS_QUERY_KEY,
 } from '~/constants/auth'
-import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 import type { RegisterRequestBody, RegisterResponse } from '~/types/auth'
-import type { AppError } from '~/types/app-error'
+import type { AuthServerErrorVm, RegisterFormField } from '~/types/auth-validation'
+import { normalizeRegisterServerError } from '~/utils/auth-error-messages'
+import {
+  getAuthValidationMessages,
+  getFirstAuthFieldError,
+  getPasswordPolicyRules,
+  hasAuthFieldErrors,
+  normalizeAuthEmail,
+  normalizeAuthName,
+  validateRegisterFields,
+} from '~/utils/auth-validation'
+import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 
 const route = useRoute()
 const { locale } = useI18n()
 const { requestLocal } = useApi()
-const { normalize, getMessage, isRetryable } = useApiError()
 
 useSeoMeta({
   title: 'Register',
@@ -27,29 +34,43 @@ const form = reactive<RegisterRequestBody>({
   confirmPassword: '',
 })
 
-const validationMessage = ref('')
-const actionError = ref<AppError | null>(null)
+const touched = reactive<Record<RegisterFormField, boolean>>({
+  name: false,
+  email: false,
+  password: false,
+  confirmPassword: false,
+})
+const dirty = reactive<Record<RegisterFormField, boolean>>({
+  name: false,
+  email: false,
+  password: false,
+  confirmPassword: false,
+})
+
+const submitState = ref<
+  'pristine' | 'submitting' | 'submit_failed' | 'submit_succeeded'
+>('pristine')
 const isSubmitting = ref(false)
+const serverError = ref<AuthServerErrorVm<RegisterFormField> | null>(null)
+
+const validationMessages = computed(() => {
+  return getAuthValidationMessages(locale.value)
+})
 
 const copy = computed(() => {
   if (locale.value === 'vi') {
     return {
-      eyebrow: 'Đăng ký',
-      title: 'Tạo tài khoản MovieHub',
+      eyebrow: 'Dang ky',
+      title: 'Tao tai khoan MovieHub',
       description:
-        'Đăng ký nhanh để lưu vé, tiếp tục thanh toán và mở rộng tài khoản sau này.',
-      nameLabel: 'Họ và tên',
+        'Dang ky nhanh de luu ve, tiep tuc thanh toan va mo rong tai khoan sau nay.',
+      nameLabel: 'Ho va ten',
       emailLabel: 'Email',
-      passwordLabel: 'Mật khẩu',
-      confirmPasswordLabel: 'Xác nhận mật khẩu',
-      submit: 'Tạo tài khoản',
-      hasAccount: 'Đã có tài khoản?',
-      login: 'Đăng nhập',
-      required: 'Tất cả các trường là bắt buộc.',
-      invalidEmail: 'Vui lòng nhập đúng định dạng email.',
-      shortPassword: `Mật khẩu phải có ít nhất ${AUTH_PASSWORD_MIN_LENGTH} ký tự.`,
-      passwordMismatch: 'Mật khẩu xác nhận chưa khớp.',
-      genericError: 'Không thể đăng ký lúc này. Vui lòng thử lại.',
+      passwordLabel: 'Mat khau',
+      confirmPasswordLabel: 'Xac nhan mat khau',
+      submit: 'Tao tai khoan',
+      hasAccount: 'Da co tai khoan?',
+      login: 'Dang nhap',
     }
   }
 
@@ -65,16 +86,14 @@ const copy = computed(() => {
     submit: 'Create account',
     hasAccount: 'Already have an account?',
     login: 'Login',
-    required: 'All fields are required.',
-    invalidEmail: 'Please enter a valid email address.',
-    shortPassword: `Password must be at least ${AUTH_PASSWORD_MIN_LENGTH} characters long.`,
-    passwordMismatch: 'Password and confirm password must match.',
-    genericError: 'Unable to register right now. Please try again.',
   }
 })
 
 const redirectTarget = computed(() => {
-  return sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) || DEFAULT_AUTH_REDIRECT
+  return (
+    sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) ||
+    DEFAULT_AUTH_REDIRECT
+  )
 })
 
 const loginLink = computed(() => {
@@ -90,55 +109,99 @@ const loginLink = computed(() => {
   }
 })
 
-const validateForm = () => {
-  if (
-    !form.name.trim() ||
-    !form.email.trim() ||
-    !form.password ||
-    !form.confirmPassword
-  ) {
-    return copy.value.required
+const clientFieldErrors = computed(() => {
+  return validateRegisterFields(form, locale.value)
+})
+
+const passwordRules = computed(() => {
+  return getPasswordPolicyRules(form.password, locale.value)
+})
+
+const hasSubmitted = computed(() => submitState.value !== 'pristine')
+
+const markFieldTouched = (field: RegisterFormField) => {
+  touched[field] = true
+}
+
+const markAllTouched = () => {
+  touched.name = true
+  touched.email = true
+  touched.password = true
+  touched.confirmPassword = true
+}
+
+const clearServerError = () => {
+  if (serverError.value) {
+    serverError.value = null
+  }
+}
+
+const handleFieldInput = (field: RegisterFormField) => {
+  dirty[field] = true
+  clearServerError()
+}
+
+const getVisibleFieldError = (field: RegisterFormField) => {
+  if (!touched[field] && !hasSubmitted.value) {
+    return ''
   }
 
-  if (!AUTH_EMAIL_PATTERN.test(form.email.trim())) {
-    return copy.value.invalidEmail
-  }
+  return (
+    getFirstAuthFieldError(clientFieldErrors.value, field) ||
+    serverError.value?.fieldErrors[field]?.[0] ||
+    ''
+  )
+}
 
-  if (form.password.length < AUTH_PASSWORD_MIN_LENGTH) {
-    return copy.value.shortPassword
-  }
+const hasServerFieldErrors = computed(() => {
+  return Boolean(
+    serverError.value &&
+      Object.values(serverError.value.fieldErrors).some((messages) => messages?.length),
+  )
+})
 
-  if (form.password !== form.confirmPassword) {
-    return copy.value.passwordMismatch
-  }
+const shouldShowServerBanner = computed(() => {
+  return Boolean(serverError.value && (!hasServerFieldErrors.value || serverError.value.retryable))
+})
 
-  return ''
+const isFieldInvalid = (field: RegisterFormField) => {
+  return Boolean(getVisibleFieldError(field))
+}
+
+const getFieldInputClass = (field: RegisterFormField) => {
+  return [
+    'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition',
+    isFieldInvalid(field)
+      ? 'border-rose-300 focus:border-rose-400'
+      : 'border-border focus:border-primary-400',
+  ]
 }
 
 const handleRegister = async () => {
-  validationMessage.value = ''
-  actionError.value = null
+  clearServerError()
+  markAllTouched()
 
-  const validationError = validateForm()
-
-  if (validationError) {
-    validationMessage.value = validationError
+  if (hasAuthFieldErrors(clientFieldErrors.value)) {
+    submitState.value = 'submit_failed'
     return
   }
 
+  submitState.value = 'submitting'
   isSubmitting.value = true
 
   try {
     await requestLocal<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: {
-        name: form.name.trim(),
-        email: form.email.trim(),
+        name: normalizeAuthName(form.name),
+        email: normalizeAuthEmail(form.email),
         password: form.password,
         confirmPassword: form.confirmPassword,
       },
       timeoutMs: 10000,
     })
+
+    submitState.value = 'submit_succeeded'
 
     const query =
       redirectTarget.value === DEFAULT_AUTH_REDIRECT
@@ -153,36 +216,15 @@ const handleRegister = async () => {
       query,
     })
   } catch (error) {
-    actionError.value = normalize(error)
+    submitState.value = 'submit_failed'
+    serverError.value = normalizeRegisterServerError(error, locale.value)
   } finally {
     isSubmitting.value = false
   }
 }
 
-const actionErrorMessage = computed(() => {
-  return actionError.value ? getMessage(actionError.value, 'action') : null
-})
-
-const actionErrorDescription = computed(() => {
-  if (!actionError.value || !actionErrorMessage.value) {
-    return ''
-  }
-
-  if (actionError.value.category !== 'validation' || !actionError.value.validation) {
-    return actionErrorMessage.value.description
-  }
-
-  const validationMessages = Object.values(actionError.value.validation)
-    .flat()
-    .filter(Boolean)
-
-  return validationMessages.length
-    ? validationMessages.join(' ')
-    : actionErrorMessage.value.description
-})
-
 const retryRegister = async () => {
-  if (!actionError.value || !isRetryable(actionError.value) || isSubmitting.value) {
+  if (!serverError.value?.retryable || isSubmitting.value) {
     return
   }
 
@@ -209,33 +251,33 @@ const retryRegister = async () => {
         </div>
 
         <div class="p-8">
-          <div
-            v-if="validationMessage"
-            class="rounded-2xl bg-amber-50 p-4 text-sm text-amber-700"
-          >
-            {{ validationMessage }}
-          </div>
-
-          <ActionErrorMessage
-            v-if="actionError && actionErrorMessage"
-            class="mt-4"
-            :title="actionErrorMessage.title"
-            :description="actionErrorDescription"
-            :retryable="actionError.retryable"
+          <FormErrorBanner
+            v-if="serverError && shouldShowServerBanner"
+            :title="serverError.title"
+            :description="serverError.description"
+            :retryable="serverError.retryable"
+            :retry-label="serverError.retryLabel"
             :retry-pending="isSubmitting"
             :retry-disabled="isSubmitting"
-            :retry-label="actionErrorMessage.retryLabel"
             @retry="retryRegister"
           />
 
-          <form class="mt-6 space-y-5" @submit.prevent="handleRegister">
+          <form class="mt-6 space-y-5" novalidate @submit.prevent="handleRegister">
             <label class="block space-y-2">
               <span class="text-sm font-medium text-slate-700">{{ copy.nameLabel }}</span>
               <input
                 v-model="form.name"
                 type="text"
                 autocomplete="name"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('name')"
+                :aria-invalid="isFieldInvalid('name')"
+                :aria-describedby="getVisibleFieldError('name') ? 'register-name-error' : undefined"
+                @input="handleFieldInput('name')"
+                @blur="markFieldTouched('name')"
+              />
+              <FieldErrorText
+                id="register-name-error"
+                :message="getVisibleFieldError('name')"
               />
             </label>
 
@@ -245,7 +287,15 @@ const retryRegister = async () => {
                 v-model="form.email"
                 type="email"
                 autocomplete="email"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('email')"
+                :aria-invalid="isFieldInvalid('email')"
+                :aria-describedby="getVisibleFieldError('email') ? 'register-email-error' : undefined"
+                @input="handleFieldInput('email')"
+                @blur="markFieldTouched('email')"
+              />
+              <FieldErrorText
+                id="register-email-error"
+                :message="getVisibleFieldError('email')"
               />
             </label>
 
@@ -255,9 +305,23 @@ const retryRegister = async () => {
                 v-model="form.password"
                 type="password"
                 autocomplete="new-password"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('password')"
+                :aria-invalid="isFieldInvalid('password')"
+                :aria-describedby="getVisibleFieldError('password') ? 'register-password-error' : undefined"
+                @input="handleFieldInput('password')"
+                @blur="markFieldTouched('password')"
+              />
+              <FieldErrorText
+                id="register-password-error"
+                :message="getVisibleFieldError('password')"
               />
             </label>
+
+            <PasswordRulesHint
+              :title="validationMessages.passwordHintTitle"
+              :description="validationMessages.passwordHintDescription"
+              :rules="passwordRules"
+            />
 
             <label class="block space-y-2">
               <span class="text-sm font-medium text-slate-700">
@@ -267,7 +331,19 @@ const retryRegister = async () => {
                 v-model="form.confirmPassword"
                 type="password"
                 autocomplete="new-password"
-                class="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary-400"
+                :class="getFieldInputClass('confirmPassword')"
+                :aria-invalid="isFieldInvalid('confirmPassword')"
+                :aria-describedby="
+                  getVisibleFieldError('confirmPassword')
+                    ? 'register-confirm-password-error'
+                    : undefined
+                "
+                @input="handleFieldInput('confirmPassword')"
+                @blur="markFieldTouched('confirmPassword')"
+              />
+              <FieldErrorText
+                id="register-confirm-password-error"
+                :message="getVisibleFieldError('confirmPassword')"
               />
             </label>
 

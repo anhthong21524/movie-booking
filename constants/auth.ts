@@ -5,6 +5,8 @@ export const AUTH_SESSION_REFRESH_INTERVAL_MS = 5 * 60 * 1000
 export const AUTH_SESSION_EXPIRY_SKEW_MS = 5 * 1000
 
 export const AUTH_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const AUTH_PASSWORD_LETTER_PATTERN = /[A-Za-z]/
+export const AUTH_PASSWORD_NUMBER_PATTERN = /\d/
 
 export const DEFAULT_AUTH_REDIRECT = '/movies'
 export const DEFAULT_PUBLIC_REDIRECT = '/'
