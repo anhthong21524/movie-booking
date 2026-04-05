@@ -18,6 +18,8 @@ import {
 import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 
 const route = useRoute()
+const appAuth = useAppAuth()
+const userStore = useUserStore()
 const { getProviders, signIn } = useAuth()
 const { locale } = useI18n()
 
@@ -133,9 +135,30 @@ const clearServerError = () => {
   }
 }
 
+const clearSubmitFailureState = () => {
+  if (submitState.value === 'submit_failed') {
+    submitState.value = 'pristine'
+  }
+}
+
 const handleFieldInput = (field: LoginFormField) => {
   dirty[field] = true
   clearServerError()
+}
+
+const redirectAuthenticatedUser = async () => {
+  await appAuth.ensureResolved()
+
+  if (!userStore.isAuthenticated) {
+    return false
+  }
+
+  clearServerError()
+  clearSubmitFailureState()
+  await navigateTo(redirectTarget.value, {
+    replace: true,
+  })
+  return true
 }
 
 const getVisibleFieldError = (field: LoginFormField) => {
@@ -161,11 +184,27 @@ const getFieldInputClass = (field: LoginFormField) => {
 
 onMounted(async () => {
   providers.value = await getProviders()
+  await redirectAuthenticatedUser()
 })
+
+watch(
+  () => userStore.isAuthenticated,
+  async (isAuthenticated) => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    await redirectAuthenticatedUser()
+  },
+)
 
 const handleCredentialsLogin = async () => {
   clearServerError()
   markAllTouched()
+
+  if (await redirectAuthenticatedUser()) {
+    return
+  }
 
   if (hasAuthFieldErrors(clientFieldErrors.value)) {
     submitState.value = 'submit_failed'
@@ -201,6 +240,10 @@ const handleCredentialsLogin = async () => {
 
 const handleGoogleLogin = async () => {
   clearServerError()
+
+  if (await redirectAuthenticatedUser()) {
+    return
+  }
 
   if (!hasGoogleProvider.value) {
     submitState.value = 'submit_failed'

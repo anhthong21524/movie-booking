@@ -20,6 +20,8 @@ import {
 import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 
 const route = useRoute()
+const appAuth = useAppAuth()
+const userStore = useUserStore()
 const { locale } = useI18n()
 const { requestLocal } = useApi()
 
@@ -136,10 +138,46 @@ const clearServerError = () => {
   }
 }
 
+const clearSubmitFailureState = () => {
+  if (submitState.value === 'submit_failed') {
+    submitState.value = 'pristine'
+  }
+}
+
 const handleFieldInput = (field: RegisterFormField) => {
   dirty[field] = true
   clearServerError()
 }
+
+const redirectAuthenticatedUser = async () => {
+  await appAuth.ensureResolved()
+
+  if (!userStore.isAuthenticated) {
+    return false
+  }
+
+  clearServerError()
+  clearSubmitFailureState()
+  await navigateTo(redirectTarget.value, {
+    replace: true,
+  })
+  return true
+}
+
+onMounted(async () => {
+  await redirectAuthenticatedUser()
+})
+
+watch(
+  () => userStore.isAuthenticated,
+  async (isAuthenticated) => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    await redirectAuthenticatedUser()
+  },
+)
 
 const getVisibleFieldError = (field: RegisterFormField) => {
   if (!touched[field] && !hasSubmitted.value) {
@@ -180,6 +218,10 @@ const getFieldInputClass = (field: RegisterFormField) => {
 const handleRegister = async () => {
   clearServerError()
   markAllTouched()
+
+  if (await redirectAuthenticatedUser()) {
+    return
+  }
 
   if (hasAuthFieldErrors(clientFieldErrors.value)) {
     submitState.value = 'submit_failed'
