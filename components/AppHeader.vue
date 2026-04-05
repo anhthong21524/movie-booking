@@ -7,6 +7,7 @@ import {
 } from '~/constants/auth'
 import { MAIN_NAVIGATION } from '~/constants/navigation'
 import { sanitizeRedirectTarget } from '~/utils/auth-routing'
+import { canViewNavigationItem } from '~/utils/authz'
 
 const appAuth = useAppAuth()
 const route = useRoute()
@@ -37,21 +38,21 @@ const authCopy = computed(() => {
   }
 })
 
-const navigation = computed(() =>
-  MAIN_NAVIGATION.filter((item) => {
-    if (item.requiresAdmin) {
-      return userStore.isAdmin
-    }
-
-    if (item.requiresAuth) {
-      return userStore.isAuthenticated
-    }
-
-    return true
-  }).map((item) => ({
+const publicNavigation = computed(() =>
+  MAIN_NAVIGATION.filter(
+    (item) =>
+      canViewNavigationItem(item, {
+        isAuthenticated: false,
+        role: 'USER',
+      }),
+  ).map((item) => ({
     ...item,
     label: t(`nav.${item.key}`),
   })),
+)
+
+const protectedNavigation = computed(() =>
+  MAIN_NAVIGATION.filter((item) => item.requiresAuth || item.requiresAdmin),
 )
 
 const loginLink = computed(() => ({
@@ -102,13 +103,15 @@ const handleLogout = async () => {
       <div class="flex flex-wrap items-center justify-end gap-3">
         <nav class="hidden items-center gap-6 md:flex">
           <NuxtLink
-            v-for="item in navigation"
+            v-for="item in publicNavigation"
             :key="item.to"
             :to="item.to"
             class="text-sm font-medium text-slate-600 hover:text-primary-600"
           >
             {{ item.label }}
           </NuxtLink>
+
+          <ProtectedAdminNav :items="protectedNavigation" />
         </nav>
 
         <AuthUiGuard when="resolved">

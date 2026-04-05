@@ -8,6 +8,11 @@ import {
   LOGIN_PATH,
   REDIRECT_QUERY_KEY,
 } from '~/constants/auth'
+import {
+  canAccessAdminRoute,
+  canAccessAuthenticatedRoute,
+  canAccessGuestRoute,
+} from '~/utils/authz'
 
 export type AppRouteAccess = 'public' | 'auth' | 'admin' | 'guest'
 export interface RouteAccessContext {
@@ -97,14 +102,14 @@ export const resolveRouteRedirect = ({
   }
 
   if (access === 'guest') {
-    return isAuthenticated ? DEFAULT_AUTH_REDIRECT : null
+    return canAccessGuestRoute(isAuthenticated) ? null : DEFAULT_AUTH_REDIRECT
   }
 
-  if (!isAuthenticated) {
+  if (!canAccessAuthenticatedRoute(isAuthenticated)) {
     return buildLoginRedirectPath(fullPath)
   }
 
-  if (access === 'admin' && !isAdmin) {
+  if (access === 'admin' && !canAccessAdminRoute(isAdmin ? 'ADMIN' : 'USER', isAuthenticated)) {
     return DEFAULT_AUTH_REDIRECT
   }
 

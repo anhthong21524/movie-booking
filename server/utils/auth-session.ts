@@ -1,10 +1,7 @@
 import { getServerSession } from '#auth'
 import type { H3Event } from 'h3'
 import type { AuthRole, AuthSessionUser } from '~/types/auth'
-
-const normalizeRole = (role: unknown): AuthRole => {
-  return role === 'ADMIN' ? 'ADMIN' : 'USER'
-}
+import { normalizeAuthRole } from '~/utils/authz'
 
 export const getServerSessionUser = async (
   event: H3Event,
@@ -20,7 +17,7 @@ export const getServerSessionUser = async (
     id: sessionUser.id,
     name: typeof sessionUser.name === 'string' ? sessionUser.name : '',
     email: typeof sessionUser.email === 'string' ? sessionUser.email : '',
-    role: normalizeRole(sessionUser.role),
+    role: normalizeAuthRole(sessionUser.role),
   }
 }
 
