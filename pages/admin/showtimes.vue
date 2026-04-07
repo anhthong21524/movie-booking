@@ -20,7 +20,7 @@ import {
   validateShowtimeFormValues,
 } from '~/utils/admin-showtime-validation'
 
-const { request } = useApi()
+const { requestLocal } = useApi()
 const { normalize, getMessage } = useApiError()
 
 definePageMeta({
@@ -80,19 +80,19 @@ const loadShowtimeData = async () => {
 
   try {
     const [moviesResponse, cinemasResponse, showtimesResponse] = await Promise.all([
-      request<{ items: Movie[] }>('/api/v1/admin/movies', {
+      requestLocal<{ items: Movie[] }>('/api/admin/movies', {
         query: {
           size: 100,
         },
       }),
-      request<{ items: CinemaLocation[] }>('/api/v1/admin/cinemas'),
-      request<{
+      requestLocal<{ items: CinemaLocation[] }>('/api/admin/cinemas'),
+      requestLocal<{
         items: AdminScheduledShowtime[]
         page: number
         size: number
         totalItems: number
         totalPages: number
-      }>('/api/v1/admin/showtimes', {
+      }>('/api/admin/showtimes', {
         query: {
           size: 100,
         },
@@ -149,8 +149,8 @@ const submitShowtime = async () => {
   submitPending.value = true
 
   try {
-    const response = await request<AdminShowtimeMutationResponse>(
-      '/api/v1/admin/showtimes',
+    const response = await requestLocal<AdminShowtimeMutationResponse>(
+      '/api/admin/showtimes',
       {
         method: 'POST',
         body: toShowtimePayload(draftEvaluation.value.draft),

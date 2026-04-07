@@ -126,7 +126,8 @@ export const validateMovieFormValues = (
   if (normalized.posterUrl) {
     const isHttpLike =
       /^https?:\/\//i.test(normalized.posterUrl) ||
-      normalized.posterUrl.startsWith('data:image/')
+      normalized.posterUrl.startsWith('data:image/') ||
+      normalized.posterUrl.startsWith('/')
 
     if (!isHttpLike) {
       pushFieldError(

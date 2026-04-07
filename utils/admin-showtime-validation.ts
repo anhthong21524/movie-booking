@@ -34,6 +34,15 @@ export const ADMIN_CINEMA_CATALOG: CinemaLocation[] = [
   },
 ]
 
+const ADMIN_ROOM_BACKEND_NAMES: Record<string, string> = {
+  'room-a': 'AUDITORIUM_A',
+  'room-b': 'AUDITORIUM_B',
+  'room-c': 'AUDITORIUM_C',
+  'room-d': 'AUDITORIUM_D',
+  'room-premium': 'PREMIUM_HALL',
+  'room-family': 'FAMILY_HALL',
+}
+
 const pushFieldError = (
   errors: AdminShowtimeFieldErrors,
   field: AdminShowtimeFormField,
@@ -101,6 +110,51 @@ export const getRoomsForCinema = (
   cinemaId: string,
 ): CinemaRoom[] => {
   return findCinemaById(cinemas, cinemaId)?.rooms ?? []
+}
+
+export const getBackendRoomName = (
+  room: Pick<CinemaRoom, 'id' | 'name'>,
+) => {
+  return ADMIN_ROOM_BACKEND_NAMES[room.id] ?? room.name
+}
+
+export const isMatchingRoomIdentifier = (
+  room: Pick<CinemaRoom, 'id' | 'name'>,
+  value: string,
+) => {
+  if (!value) {
+    return false
+  }
+
+  return room.name === value || getBackendRoomName(room) === value
+}
+
+export const findRoomByIdentifier = (
+  cinemas: CinemaLocation[],
+  value: string,
+) => {
+  for (const cinema of cinemas) {
+    const room = cinema.rooms.find((candidate) =>
+      isMatchingRoomIdentifier(candidate, value),
+    )
+
+    if (room) {
+      return {
+        cinema,
+        room,
+      }
+    }
+  }
+
+  return null
+}
+
+export const normalizeRoomDisplayName = (
+  value: string,
+  cinemas: CinemaLocation[] = ADMIN_CINEMA_CATALOG,
+) => {
+  const roomLookup = findRoomByIdentifier(cinemas, value)
+  return roomLookup?.room.name ?? value
 }
 
 const parseDateParts = (value: string) => {
@@ -181,6 +235,10 @@ export const computeShowtimeEndIso = (
 
   const endMs = startMs + (durationMinutes + bufferMinutes) * 60 * 1000
   return new Date(endMs).toISOString()
+}
+
+export const toBackendIsoDateTime = (value: string) => {
+  return value.replace(/\.\d{3}Z$/, 'Z')
 }
 
 export const formatAdminDateTime = (value: string) => {

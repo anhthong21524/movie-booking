@@ -1,7 +1,7 @@
 import type { AdminMovieMutationResponse } from '~/types/admin-movie'
 import type { Movie, MovieStatus } from '~/types'
 import { requireServerRole } from '~/server/utils/auth-session'
-import { updateAdminMovie } from '~/server/utils/admin-movies'
+import { backendRequest } from '~/server/utils/backend-api'
 import {
   hasMovieFieldErrors,
   validateMovieFormValues,
@@ -62,7 +62,7 @@ export default defineEventHandler(
       })
     }
 
-    const item = updateAdminMovie(id, {
+    const payload = {
       title: body.title!.trim(),
       durationMinutes: Number(body.durationMinutes),
       genre: body.genre!.trim(),
@@ -72,14 +72,16 @@ export default defineEventHandler(
       basePrice: Number(body.basePrice),
       posterUrl: typeof body.posterUrl === 'string' ? body.posterUrl.trim() : undefined,
       status: normalizeMovieStatus(body.status),
-    })
-
-    if (!item) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Movie not found.',
-      })
     }
+
+    const item = await backendRequest<AdminMovieMutationResponse>(
+      event,
+      `/api/v1/admin/movies/${id}`,
+      {
+        method: 'PUT',
+        body: payload,
+      },
+    )
 
     return item
   },

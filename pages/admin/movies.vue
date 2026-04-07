@@ -17,7 +17,7 @@ import {
   validateMovieFormValues,
 } from '~/utils/admin-movie-validation'
 
-const { request } = useApi()
+const { requestLocal } = useApi()
 const { normalize, getMessage } = useApiError()
 
 definePageMeta({
@@ -69,7 +69,7 @@ const loadMovies = async () => {
   pageError.value = null
 
   try {
-    const response = await request<AdminMoviesResponse>('/api/v1/admin/movies', {
+    const response = await requestLocal<AdminMoviesResponse>('/api/admin/movies', {
       query: {
         size: 100,
       },
@@ -120,14 +120,14 @@ const submitMovie = async () => {
   try {
     const payload = toMoviePayload(formValues.value)
     const response = selectedMovieId.value
-      ? await request<AdminMovieMutationResponse>(
-          `/api/v1/admin/movies/${selectedMovieId.value}`,
+      ? await requestLocal<AdminMovieMutationResponse>(
+          `/api/admin/movies/${selectedMovieId.value}`,
           {
             method: 'PATCH',
             body: payload,
           },
         )
-      : await request<AdminMovieMutationResponse>('/api/v1/admin/movies', {
+      : await requestLocal<AdminMovieMutationResponse>('/api/admin/movies', {
           method: 'POST',
           body: payload,
         })
@@ -157,16 +157,11 @@ const uploadPoster = async (payload: PosterUploadPayload) => {
   uploadPending.value = true
 
   try {
-    const fileResponse = await fetch(payload.dataUrl)
-    const fileBlob = await fileResponse.blob()
-    const formData = new FormData()
-    formData.append('file', fileBlob, payload.fileName)
-
-    const response = await request<PosterUploadResponse>(
-      '/api/v1/admin/movies/upload-poster',
+    const response = await requestLocal<PosterUploadResponse>(
+      '/api/admin/movies/upload-poster',
       {
         method: 'POST',
-        body: formData,
+        body: payload,
         timeoutMs: 20000,
       },
     )
@@ -205,8 +200,8 @@ const deleteMovie = async () => {
   successMessage.value = ''
 
   try {
-    await request<null>(
-      `/api/v1/admin/movies/${deleteTarget.value.id}`,
+    await requestLocal<null>(
+      `/api/admin/movies/${deleteTarget.value.id}`,
       {
         method: 'DELETE',
       },

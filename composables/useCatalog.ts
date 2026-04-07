@@ -1,5 +1,6 @@
 import type { MaybeRefOrGetter } from 'vue'
 import type { Movie, Seat, Showtime } from '~/types'
+import { normalizeShowtime, normalizeShowtimes } from '~/utils/showtime-api'
 
 interface MoviesResponse {
   items: Movie[]
@@ -79,7 +80,7 @@ export const useMovieDetail = (movieId: MaybeRefOrGetter<string>) => {
 
     return {
       movie,
-      showtimes: showtimesResponse.items ?? [],
+      showtimes: normalizeShowtimes(showtimesResponse.items ?? []),
     }
   })
 
@@ -123,7 +124,7 @@ export const useShowtimeSeats = (showtimeId: MaybeRefOrGetter<string>) => {
     ])
 
     return {
-      showtime,
+      showtime: normalizeShowtime(showtime),
       seats: seatsResponse.seats ?? [],
       capacity: seatsResponse.capacity ?? 0,
       remainingSeats: seatsResponse.remainingSeats ?? 0,
