@@ -17,15 +17,16 @@ import {
   validateMovieFormValues,
 } from '~/utils/admin-movie-validation'
 
-const { request } = useApi()
+const { requestLocal } = useApi()
 const { normalize, getMessage } = useApiError()
+const { t } = useI18n()
 
 definePageMeta({
   layout: 'admin',
 })
 
 useSeoMeta({
-  title: 'Admin Movies',
+  title: t('adminMoviesPage.seoTitle'),
 })
 
 const movies = ref<Movie[]>([])
@@ -51,13 +52,20 @@ const actionErrorMessage = computed(() =>
 )
 
 const formTitle = computed(() =>
-  isEditing.value ? 'Edit movie' : 'Create movie',
+  isEditing.value ? t('adminMoviesPage.formEditTitle') : t('adminMoviesPage.formCreateTitle'),
 )
 const formDescription = computed(() =>
   isEditing.value
-    ? 'Update movie metadata, poster artwork, and pricing details without leaving the list.'
-    : 'Add a new movie with complete metadata and optional poster artwork.',
+    ? t('adminMoviesPage.formEditDescription')
+    : t('adminMoviesPage.formCreateDescription'),
 )
+const deleteDialogTitle = computed(() => {
+  if (!deleteTarget.value) {
+    return t('adminMoviesPage.deleteDialogTitleFallback')
+  }
+
+  return t('adminMoviesPage.deleteDialogTitle').replace('{title}', deleteTarget.value.title)
+})
 
 const updateFormValues = (value: AdminMovieFormValues) => {
   formValues.value = value
@@ -69,7 +77,7 @@ const loadMovies = async () => {
   pageError.value = null
 
   try {
-    const response = await request<AdminMoviesResponse>('/api/v1/admin/movies', {
+    const response = await requestLocal<AdminMoviesResponse>('/api/admin/movies', {
       query: {
         size: 100,
       },
@@ -120,28 +128,28 @@ const submitMovie = async () => {
   try {
     const payload = toMoviePayload(formValues.value)
     const response = selectedMovieId.value
-      ? await request<AdminMovieMutationResponse>(
-          `/api/v1/admin/movies/${selectedMovieId.value}`,
+      ? await requestLocal<AdminMovieMutationResponse>(
+          `/api/admin/movies/${selectedMovieId.value}`,
           {
             method: 'PATCH',
             body: payload,
           },
         )
-      : await request<AdminMovieMutationResponse>('/api/v1/admin/movies', {
+      : await requestLocal<AdminMovieMutationResponse>('/api/admin/movies', {
           method: 'POST',
           body: payload,
         })
 
     successMessage.value = selectedMovieId.value
-      ? 'Movie updated successfully.'
-      : 'Movie created successfully.'
+      ? t('adminMoviesPage.updateSuccess')
+      : t('adminMoviesPage.createSuccess')
     await loadMovies()
 
     if (selectedMovieId.value) {
       startEditingMovie(response)
     } else {
       resetForm()
-      successMessage.value = 'Movie created successfully.'
+      successMessage.value = t('adminMoviesPage.createSuccess')
     }
   } catch (error) {
     actionError.value = normalize(error)
@@ -157,16 +165,11 @@ const uploadPoster = async (payload: PosterUploadPayload) => {
   uploadPending.value = true
 
   try {
-    const fileResponse = await fetch(payload.dataUrl)
-    const fileBlob = await fileResponse.blob()
-    const formData = new FormData()
-    formData.append('file', fileBlob, payload.fileName)
-
-    const response = await request<PosterUploadResponse>(
-      '/api/v1/admin/movies/upload-poster',
+    const response = await requestLocal<PosterUploadResponse>(
+      '/api/admin/movies/upload-poster',
       {
         method: 'POST',
-        body: formData,
+        body: payload,
         timeoutMs: 20000,
       },
     )
@@ -205,8 +208,8 @@ const deleteMovie = async () => {
   successMessage.value = ''
 
   try {
-    await request<null>(
-      `/api/v1/admin/movies/${deleteTarget.value.id}`,
+    await requestLocal<null>(
+      `/api/admin/movies/${deleteTarget.value.id}`,
       {
         method: 'DELETE',
       },
@@ -217,7 +220,7 @@ const deleteMovie = async () => {
     }
 
     deleteTarget.value = null
-    successMessage.value = 'Movie deleted successfully.'
+    successMessage.value = t('adminMoviesPage.deleteSuccess')
     await loadMovies()
   } catch (error) {
     actionError.value = normalize(error)
@@ -234,8 +237,8 @@ onMounted(async () => {
 <template>
   <div class="space-y-8">
     <PageHero
-      title="Admin: Movies"
-      description="Create, edit, delete, and maintain movie catalog entries with poster artwork and validation guardrails."
+      :title="t('adminMoviesPage.heroTitle')"
+      :description="t('adminMoviesPage.heroDescription')"
     />
 
     <FullPageErrorState
@@ -251,13 +254,13 @@ onMounted(async () => {
       <section class="space-y-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-slate-950">Movie catalog</h2>
+            <h2 class="text-2xl font-bold text-slate-950">{{ t('adminMoviesPage.sectionTitle') }}</h2>
             <p class="mt-1 text-sm leading-6 text-slate-600">
-              Manage current movie records, poster artwork, pricing, and metadata from one place.
+              {{ t('adminMoviesPage.sectionDescription') }}
             </p>
           </div>
           <button type="button" class="btn-secondary" @click="resetForm">
-            Create new movie
+            {{ t('adminMoviesPage.createNew') }}
           </button>
         </div>
 
@@ -276,9 +279,9 @@ onMounted(async () => {
 
         <PageEmptyState
           v-else-if="!movies.length"
-          title="No movies in the admin catalog"
-          description="Create the first movie to start building the booking catalog. New entries will appear here immediately after save."
-          icon="◌"
+          :title="t('adminMoviesPage.emptyTitle')"
+          :description="t('adminMoviesPage.emptyDescription')"
+          icon="○"
         />
 
         <AdminMovieList
@@ -310,8 +313,8 @@ onMounted(async () => {
           :errors="fieldErrors"
           :submit-pending="submitPending"
           :upload-pending="uploadPending"
-          :submit-label="isEditing ? 'Save changes' : 'Create movie'"
-          :submit-loading-label="isEditing ? 'Saving changes...' : 'Creating movie...'"
+          :submit-label="isEditing ? t('adminMoviesPage.saveChanges') : t('adminMoviesPage.createNew')"
+          :submit-loading-label="isEditing ? t('adminMoviesPage.savingChanges') : `${t('adminMoviesPage.createNew')}...`"
           :form-title="formTitle"
           :form-description="formDescription"
           :on-poster-upload="uploadPoster"
@@ -324,14 +327,12 @@ onMounted(async () => {
 
     <DeleteConfirmationDialog
       :open="Boolean(deleteTarget)"
-      :title="deleteTarget ? `Delete ${deleteTarget.title}?` : 'Delete movie?'"
-      :description="
-        deleteTarget
-          ? 'This removes the movie from the admin catalog. Use this only when the record should no longer be managed here.'
-          : ''
-      "
+      :title="deleteDialogTitle"
+      :description="deleteTarget ? t('adminMoviesPage.deleteDialogDescription') : ''"
       :pending="Boolean(deletePendingMovieId)"
-      confirm-label="Delete movie"
+      :confirm-label="t('adminMoviesPage.deleteConfirm')"
+      :cancel-label="t('adminMoviesPage.cancel')"
+      :heading="t('adminMoviesPage.deleteHeading')"
       @cancel="closeDeleteDialog"
       @confirm="deleteMovie"
     />

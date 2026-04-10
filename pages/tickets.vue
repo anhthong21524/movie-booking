@@ -3,6 +3,7 @@ import { useBookingStore } from '~/stores/booking'
 import type { TicketHistoryState } from '~/types/tickets'
 import type { Movie, Showtime } from '~/types'
 import { getTicketsEmptyState } from '~/utils/empty-state'
+import { normalizeShowtime } from '~/utils/showtime-api'
 import { buildTicketHistoryState } from '~/utils/tickets'
 
 const { locale, t } = useI18n()
@@ -27,7 +28,7 @@ const loadTicketHistory = async (): Promise<TicketHistoryState> => {
   )
   const showtimes = await Promise.all(
     uniqueShowtimeIds.map((showtimeId) =>
-      request<Showtime>(`/api/v1/showtimes/${showtimeId}`),
+      request<Showtime>(`/api/v1/showtimes/${showtimeId}`).then(normalizeShowtime),
     ),
   )
   const uniqueMovieIds = Array.from(

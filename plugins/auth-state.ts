@@ -3,10 +3,16 @@ import {
   AUTH_SESSION_REFRESH_INTERVAL_MS,
   AUTH_SYNC_STORAGE_KEY,
 } from '~/constants/auth'
+import { DEFAULT_AUTH_REDIRECT } from '~/constants/auth'
+import {
+  classifyRouteAccess,
+  resolveRouteRedirect,
+} from '~/utils/auth-routing'
 
 export default defineNuxtPlugin(async () => {
   const appAuth = useAppAuth()
   const userStore = useUserStore()
+  const router = useRouter()
   let expiryTimer: ReturnType<typeof setTimeout> | null = null
   let refreshTimer: ReturnType<typeof setInterval> | null = null
   let lastBroadcastSignature = ''
@@ -89,11 +95,52 @@ export default defineNuxtPlugin(async () => {
     return
   }
 
+  const syncRouteProtection = async () => {
+    const currentRoute = router.currentRoute.value
+    const access = classifyRouteAccess(currentRoute.path)
+
+    if (access === 'public') {
+      return
+    }
+
+    const redirectTarget = resolveRouteRedirect({
+      access,
+      fullPath: currentRoute.fullPath,
+      isAuthenticated: userStore.isAuthenticated,
+      isAdmin: userStore.isAdmin,
+    })
+
+    if (!redirectTarget || redirectTarget === currentRoute.fullPath) {
+      return
+    }
+
+    if (redirectTarget === DEFAULT_AUTH_REDIRECT) {
+      await navigateTo(DEFAULT_AUTH_REDIRECT, { replace: true })
+      return
+    }
+
+    await navigateTo(redirectTarget, { replace: true })
+  }
+
   watch(
     () => [userStore.status, userStore.expiresAt, userStore.profile?.id] as const,
     () => {
       scheduleExpiry()
       syncBroadcast()
+    },
+    {
+      immediate: true,
+    },
+  )
+
+  watch(
+    () => [userStore.status, router.currentRoute.value.fullPath] as const,
+    () => {
+      if (userStore.status === 'loading' || userStore.status === 'logging_out') {
+        return
+      }
+
+      void syncRouteProtection()
     },
     {
       immediate: true,

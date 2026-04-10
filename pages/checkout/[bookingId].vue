@@ -3,6 +3,7 @@ import type { Booking, Movie, Showtime } from '~/types'
 import { useBookingStore } from '~/stores/booking'
 import { buildCheckoutSummaryVm, calculateBookingPricing } from '~/utils/checkout'
 import { buildBookingRoute } from '~/utils/routes'
+import { normalizeShowtime } from '~/utils/showtime-api'
 
 const bookingStore = useBookingStore()
 const { locale, t } = useI18n()
@@ -38,7 +39,9 @@ const loadCheckout = async (): Promise<{
     cachedBooking ??
     await request<Booking>(`/api/v1/bookings/${bookingId.value}`)
 
-  const showtime = await request<Showtime>(`/api/v1/showtimes/${booking.showtimeId}`)
+  const showtime = normalizeShowtime(
+    await request<Showtime>(`/api/v1/showtimes/${booking.showtimeId}`),
+  )
   const movie = await request<Movie>(`/api/v1/movies/${showtime.movieId}`)
 
   return {

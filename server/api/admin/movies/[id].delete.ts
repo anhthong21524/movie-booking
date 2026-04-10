@@ -1,5 +1,5 @@
 import { requireServerRole } from '~/server/utils/auth-session'
-import { deleteAdminMovie } from '~/server/utils/admin-movies'
+import { backendRequest } from '~/server/utils/backend-api'
 
 export default defineEventHandler(
   async (event): Promise<void> => {
@@ -14,13 +14,8 @@ export default defineEventHandler(
       })
     }
 
-    const deleted = deleteAdminMovie(id)
-
-    if (!deleted) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Movie not found.',
-      })
-    }
+    await backendRequest<null>(event, `/api/v1/admin/movies/${id}`, {
+      method: 'DELETE',
+    })
   },
 )

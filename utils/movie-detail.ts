@@ -15,15 +15,67 @@ interface InternalShowtimeCardVm extends ShowtimeCardVm {
 
 const resolveLocale = (locale: AppLocale) => (locale === 'vi' ? 'vi-VN' : 'en-US')
 
+const getCopy = (locale: AppLocale) => {
+  if (locale === 'vi') {
+    return {
+      updating: 'Đang cập nhật',
+      comingSoon: 'Sắp cập nhật',
+      duration: 'Thời lượng',
+      genre: 'Thể loại',
+      rating: 'Phân loại',
+      releaseDate: 'Khởi chiếu',
+      ticketPrice: 'Giá vé từ',
+      minutes: 'phút',
+      untitledMovie: 'Phim đang cập nhật',
+      descriptionPending: 'Nội dung phim đang được cập nhật.',
+      unknownGenre: 'Đang cập nhật',
+      roomPending: 'Phòng chiếu đang cập nhật',
+      soldOut: 'Đã hết chỗ',
+      seatsLeft: (count: number) => `${count} ghế còn trống`,
+      chooseShowtime: 'Chọn suất này',
+      unavailablePast: 'Suất chiếu đã bắt đầu hoặc kết thúc.',
+      unavailableGeneric: 'Suất chiếu tạm thời không khả dụng.',
+      continueSeats: 'Tiếp tục đến bước chọn ghế.',
+      passed: 'Đã qua giờ chiếu',
+      noSeats: 'Hết ghế trống',
+    }
+  }
+
+  return {
+    updating: 'Not available',
+    comingSoon: 'Coming soon',
+    duration: 'Duration',
+    genre: 'Genre',
+    rating: 'Rating',
+    releaseDate: 'Release date',
+    ticketPrice: 'Ticket price',
+    minutes: 'minutes',
+    untitledMovie: 'Untitled movie',
+    descriptionPending: 'Movie description is being updated.',
+    unknownGenre: 'Unknown genre',
+    roomPending: 'Room pending',
+    soldOut: 'Sold out',
+    seatsLeft: (count: number) => `${count} seats left`,
+    chooseShowtime: 'Choose this showtime',
+    unavailablePast: 'This showtime has already started or ended.',
+    unavailableGeneric: 'This showtime is currently unavailable.',
+    continueSeats: 'Continue to seat selection.',
+    passed: 'Showtime passed',
+    noSeats: 'Sold out',
+  }
+}
+
 const formatReleaseDate = (value: string | null, locale: AppLocale) => {
+  const copy = getCopy(locale)
+
   if (!value) {
-    return locale === 'vi' ? 'Dang cap nhat' : 'Coming soon'
+    return locale === 'vi' ? copy.updating : copy.comingSoon
   }
 
   const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
-    return locale === 'vi' ? 'Dang cap nhat' : 'Coming soon'
+    return locale === 'vi' ? copy.updating : copy.comingSoon
   }
 
   return new Intl.DateTimeFormat(resolveLocale(locale), {
@@ -64,35 +116,36 @@ const buildMovieMetadata = (
   movie: Movie,
   locale: AppLocale,
 ): MovieMetadataItemVm[] => {
-  const missingValue = locale === 'vi' ? 'Dang cap nhat' : 'Not available'
+  const copy = getCopy(locale)
+  const missingValue = copy.updating
 
   return [
     {
       id: 'duration',
-      label: locale === 'vi' ? 'Thoi luong' : 'Duration',
+      label: copy.duration,
       value:
         typeof movie.durationMinutes === 'number' && movie.durationMinutes > 0
-          ? `${movie.durationMinutes} ${locale === 'vi' ? 'phut' : 'minutes'}`
+          ? `${movie.durationMinutes} ${copy.minutes}`
           : missingValue,
     },
     {
       id: 'genre',
-      label: locale === 'vi' ? 'The loai' : 'Genre',
+      label: copy.genre,
       value: movie.genre?.trim() || missingValue,
     },
     {
       id: 'rating',
-      label: locale === 'vi' ? 'Phan loai' : 'Rating',
+      label: copy.rating,
       value: movie.rating?.trim() || missingValue,
     },
     {
       id: 'releaseDate',
-      label: locale === 'vi' ? 'Khoi chieu' : 'Release date',
+      label: copy.releaseDate,
       value: formatReleaseDate(movie.releaseDate || null, locale),
     },
     {
       id: 'ticketPrice',
-      label: locale === 'vi' ? 'Gia ve tu' : 'Ticket price',
+      label: copy.ticketPrice,
       value:
         typeof movie.basePrice === 'number' && movie.basePrice > 0
           ? formatCurrency(movie.basePrice, 'USD', locale)
@@ -105,15 +158,13 @@ export const toMovieDetailVm = (
   movie: Movie,
   locale: AppLocale,
 ): MovieDetailVm => {
+  const copy = getCopy(locale)
+
   return {
     id: movie.id,
-    title: movie.title?.trim() || (locale === 'vi' ? 'Phim dang cap nhat' : 'Untitled movie'),
-    description:
-      movie.description?.trim() ||
-      (locale === 'vi'
-        ? 'Noi dung phim dang duoc cap nhat.'
-        : 'Movie description is being updated.'),
-    genre: movie.genre?.trim() || (locale === 'vi' ? 'Dang cap nhat' : 'Unknown genre'),
+    title: movie.title?.trim() || copy.untitledMovie,
+    description: movie.description?.trim() || copy.descriptionPending,
+    genre: movie.genre?.trim() || copy.unknownGenre,
     rating: movie.rating?.trim() || 'NR',
     durationMinutes:
       typeof movie.durationMinutes === 'number' && movie.durationMinutes > 0
@@ -143,6 +194,7 @@ const toShowtimeCardVm = (
     return null
   }
 
+  const copy = getCopy(locale)
   const remainingSeats = Math.max(showtime.remainingSeats ?? 0, 0)
   const isSoldOut = remainingSeats === 0
   const isPast = startsAtDate.getTime() <= Date.now()
@@ -151,7 +203,7 @@ const toShowtimeCardVm = (
   return {
     id: showtime.id,
     movieId: showtime.movieId,
-    roomName: showtime.roomName?.trim() || (locale === 'vi' ? 'Phong chieu dang cap nhat' : 'Room pending'),
+    roomName: showtime.roomName?.trim() || copy.roomPending,
     startsAt: showtime.startsAt,
     startsAtMs: startsAtDate.getTime(),
     dateKey: formatDateKey(startsAtDate, locale),
@@ -160,35 +212,19 @@ const toShowtimeCardVm = (
     timeLabel: formatTimeLabel(startsAtDate, locale),
     isoLabel: startsAtDate.toISOString(),
     priceLabel: formatCurrency(showtime.price, 'USD', locale),
-    availabilityLabel: isSoldOut
-      ? locale === 'vi'
-        ? 'Da het cho'
-        : 'Sold out'
-      : locale === 'vi'
-        ? `${remainingSeats} ghe con trong`
-        : `${remainingSeats} seats left`,
+    availabilityLabel: isSoldOut ? copy.soldOut : copy.seatsLeft(remainingSeats),
     action: {
-      label: locale === 'vi' ? 'Chon suat nay' : 'Choose this showtime',
+      label: copy.chooseShowtime,
       helperText: isUnavailable
         ? isPast
-          ? locale === 'vi'
-            ? 'Suat chieu da bat dau hoac ket thuc.'
-            : 'This showtime has already started or ended.'
-          : locale === 'vi'
-            ? 'Suat chieu tam thoi khong kha dung.'
-            : 'This showtime is currently unavailable.'
-        : locale === 'vi'
-          ? 'Tiep tuc den buoc chon ghe.'
-          : 'Continue to seat selection.',
+          ? copy.unavailablePast
+          : copy.unavailableGeneric
+        : copy.continueSeats,
       disabled: isUnavailable,
       disabledReason: isPast
-        ? locale === 'vi'
-          ? 'Da qua gio chieu'
-          : 'Showtime passed'
+        ? copy.passed
         : isSoldOut
-          ? locale === 'vi'
-            ? 'Het ghe trong'
-            : 'Sold out'
+          ? copy.noSeats
           : undefined,
     },
   }

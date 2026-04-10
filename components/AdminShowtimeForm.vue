@@ -26,6 +26,8 @@ const emit = defineEmits<{
   reset: []
 }>()
 
+const { t } = useI18n()
+
 const touched = reactive<Record<AdminShowtimeFormField, boolean>>({
   movieId: false,
   date: false,
@@ -81,6 +83,10 @@ const getInputClass = (field: AdminShowtimeFormField) => [
     : 'border-border focus:border-primary-400',
 ]
 
+const roomPlaceholder = computed(() =>
+  props.values.cinemaId ? t('adminShowtimeForm.selectRoom') : t('adminShowtimeForm.selectCinemaFirst'),
+)
+
 const handleSubmit = () => {
   hasSubmitted.value = true
   markAllTouched()
@@ -92,18 +98,18 @@ const handleSubmit = () => {
   <section class="card space-y-5 p-5 sm:p-6">
     <div>
       <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600">
-        Create showtime
+        {{ t('adminShowtimeForm.eyebrow') }}
       </p>
-      <h2 class="mt-3 text-2xl font-bold text-slate-950">Schedule a new screening</h2>
+      <h2 class="mt-3 text-2xl font-bold text-slate-950">{{ t('adminShowtimeForm.title') }}</h2>
       <p class="mt-2 text-sm leading-6 text-slate-600">
-        Pick the movie, start time, cinema, and room. The end time is derived from the movie runtime and checked against the room schedule before save.
+        {{ t('adminShowtimeForm.description') }}
       </p>
     </div>
 
     <form class="space-y-5" novalidate @submit.prevent="handleSubmit">
       <div class="grid gap-5 lg:grid-cols-2">
         <label class="block space-y-2 lg:col-span-2">
-          <span class="text-sm font-medium text-slate-700">Movie</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.movie') }}</span>
           <select
             :value="values.movieId"
             :class="getInputClass('movieId')"
@@ -112,7 +118,7 @@ const handleSubmit = () => {
             @change="updateField('movieId', ($event.target as HTMLSelectElement).value)"
             @blur="markFieldTouched('movieId')"
           >
-            <option value="">Select a movie</option>
+            <option value="">{{ t('adminShowtimeForm.selectMovie') }}</option>
             <option
               v-for="option in movieOptions"
               :key="option.value"
@@ -125,7 +131,7 @@ const handleSubmit = () => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Date</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.date') }}</span>
           <input
             :value="values.date"
             type="date"
@@ -139,7 +145,7 @@ const handleSubmit = () => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Start time</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.startTime') }}</span>
           <input
             :value="values.time"
             type="time"
@@ -153,7 +159,7 @@ const handleSubmit = () => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Cinema</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.cinema') }}</span>
           <select
             :value="values.cinemaId"
             :class="getInputClass('cinemaId')"
@@ -162,7 +168,7 @@ const handleSubmit = () => {
             @change="updateField('cinemaId', ($event.target as HTMLSelectElement).value)"
             @blur="markFieldTouched('cinemaId')"
           >
-            <option value="">Select a cinema</option>
+            <option value="">{{ t('adminShowtimeForm.selectCinema') }}</option>
             <option
               v-for="cinema in cinemas"
               :key="cinema.id"
@@ -175,7 +181,7 @@ const handleSubmit = () => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Room</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.room') }}</span>
           <select
             :value="values.roomId"
             :class="getInputClass('roomId')"
@@ -186,21 +192,21 @@ const handleSubmit = () => {
             @blur="markFieldTouched('roomId')"
           >
             <option value="">
-              {{ values.cinemaId ? 'Select a room' : 'Select a cinema first' }}
+              {{ roomPlaceholder }}
             </option>
             <option
               v-for="room in rooms"
               :key="room.id"
               :value="room.id"
             >
-              {{ room.name }} - {{ room.capacity }} seats
+              {{ room.name }} - {{ t('adminShowtimeForm.seatsLabel').replace('{count}', String(room.capacity)) }}
             </option>
           </select>
           <FieldErrorText id="showtime-room-error" :message="getVisibleFieldError('roomId')" />
         </label>
 
         <label class="block space-y-2 lg:col-span-2">
-          <span class="text-sm font-medium text-slate-700">Ticket price</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('adminShowtimeForm.ticketPrice') }}</span>
           <input
             :value="values.price"
             type="number"
@@ -224,13 +230,13 @@ const handleSubmit = () => {
 
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button type="button" class="btn-secondary" @click="$emit('reset')">
-          Reset form
+          {{ t('adminShowtimeForm.reset') }}
         </button>
         <LoadingButton
           type="submit"
-          :label="'Create showtime'"
+          :label="t('adminShowtimeForm.create')"
           :loading="submitPending"
-          :loading-label="'Creating showtime...'"
+          :loading-label="t('adminShowtimeForm.creating')"
         />
       </div>
     </form>

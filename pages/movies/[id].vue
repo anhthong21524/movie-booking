@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { buildMovieDetailPageVm } from '~/utils/movie-detail'
 import { getShowtimesEmptyState } from '~/utils/empty-state'
-import { buildBookingRoute } from '~/utils/routes'
 
 const route = useRoute()
 const { locale, t } = useI18n()
@@ -38,19 +37,25 @@ const pageState = computed(() => {
   } as const
 })
 
-const bookingRouteExample = computed(() => {
+const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
+const dateGroupCountLabel = computed(() => {
   if (pageState.value?.kind !== 'ready') {
     return ''
   }
 
-  const firstAvailable = pageState.value.vm.showtimeGroups
-    .flatMap((group) => group.showtimes)
-    .find((showtime) => !showtime.action.disabled)
-
-  return firstAvailable ? buildBookingRoute(firstAvailable.id) : ''
+  return pageState.value.vm.showtimeGroups.length === 1
+    ? t('movieDetailPage.dateGroupSingular')
+    : t('movieDetailPage.dateGroupPlural')
 })
+const malformedShowtimeMessage = computed(() => {
+  if (pageState.value?.kind !== 'ready' || !pageState.value.vm.malformedShowtimeCount) {
+    return ''
+  }
 
-const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
+  return t('movieDetailPage.malformedShowtimes')
+    .replace('{count}', String(pageState.value.vm.malformedShowtimeCount))
+    .replace('{suffix}', pageState.value.vm.malformedShowtimeCount === 1 ? '' : 's')
+})
 
 onMounted(async () => {
   await execute()
@@ -88,9 +93,9 @@ watch(movieId, async () => {
 
     <FullPageErrorState
       v-else-if="pageError"
-      title="We could not load this movie"
-      description="Try refreshing the page. If the issue persists, return to the movie list and retry."
-      retry-label="Retry"
+      :title="t('movieDetailPage.loadErrorTitle')"
+      :description="t('movieDetailPage.loadErrorDescription')"
+      :retry-label="t('common.retry')"
       :retry-disabled="false"
       @retry="retry"
     />
@@ -98,16 +103,16 @@ watch(movieId, async () => {
     <EmptyState
       v-else-if="pageStatus === 'success' && !movie"
       :title="t('moviesPage.movieNotFound')"
-      description="Return to the movie list and choose another title."
-      action-label="Back to movies"
+      :description="t('movieDetailPage.notFoundDescription')"
+      :action-label="t('movieDetailPage.backToMovies')"
       action-to="/movies"
     />
 
     <EmptyState
       v-else-if="pageState?.kind === 'malformed-movie'"
-      title="Movie details are temporarily unavailable"
-      description="Some required movie fields are missing. Refresh the page or return to the movie list."
-      action-label="Back to movies"
+      :title="t('movieDetailPage.malformedTitle')"
+      :description="t('movieDetailPage.malformedDescription')"
+      :action-label="t('movieDetailPage.backToMovies')"
       action-to="/movies"
     />
 
@@ -148,22 +153,12 @@ watch(movieId, async () => {
             </div>
 
             <div class="mt-6 rounded-[1.5rem] border border-primary-100 bg-primary-50/60 p-5">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p class="text-sm font-semibold text-primary-700">
-                    Booking entry point
-                  </p>
-                  <p class="mt-1 text-sm text-slate-600">
-                    Choose a valid showtime below to continue to seat selection.
-                  </p>
-                </div>
-                <code
-                  v-if="bookingRouteExample"
-                  class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-700"
-                >
-                  {{ bookingRouteExample }}
-                </code>
-              </div>
+              <p class="text-sm font-semibold text-primary-700">
+                {{ t('movieDetailPage.bookingEntryTitle') }}
+              </p>
+              <p class="mt-1 text-sm text-slate-600">
+                {{ t('movieDetailPage.bookingEntryDescription') }}
+              </p>
             </div>
           </div>
         </div>
@@ -176,12 +171,12 @@ watch(movieId, async () => {
               {{ t('moviesPage.showtimesTitle') }}
             </h2>
             <p class="mt-1 max-w-2xl text-slate-600">
-              Browse upcoming sessions grouped by date. Disabled times are unavailable or invalid and cannot be selected.
+              {{ t('movieDetailPage.showtimesIntro') }}
             </p>
           </div>
           <p class="text-sm text-slate-500">
             {{ pageState.vm.showtimeGroups.length }}
-            {{ pageState.vm.showtimeGroups.length === 1 ? 'date group' : 'date groups' }}
+            {{ dateGroupCountLabel }}
           </p>
         </div>
 
@@ -189,9 +184,7 @@ watch(movieId, async () => {
           v-if="pageState.vm.malformedShowtimeCount"
           class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
         >
-          {{
-            `${pageState.vm.malformedShowtimeCount} malformed showtime${pageState.vm.malformedShowtimeCount === 1 ? '' : 's'} were hidden because their schedule data was invalid.`
-          }}
+          {{ malformedShowtimeMessage }}
         </div>
 
         <SectionEmptyState
@@ -208,7 +201,7 @@ watch(movieId, async () => {
             v-if="!pageState.vm.hasAvailableShowtimes"
             class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700"
           >
-            All listed showtimes are currently unavailable. Check another date or come back later for new sessions.
+            {{ t('movieDetailPage.unavailableBanner') }}
           </div>
 
           <div class="space-y-5">

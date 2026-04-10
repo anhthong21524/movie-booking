@@ -22,11 +22,11 @@ import { sanitizeRedirectTarget } from '~/utils/auth-routing'
 const route = useRoute()
 const appAuth = useAppAuth()
 const userStore = useUserStore()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { requestLocal } = useApi()
 
 useSeoMeta({
-  title: 'Register',
+  title: t('authPages.registerSeoTitle'),
 })
 
 const form = reactive<RegisterRequestBody>({
@@ -57,38 +57,6 @@ const serverError = ref<AuthServerErrorVm<RegisterFormField> | null>(null)
 
 const validationMessages = computed(() => {
   return getAuthValidationMessages(locale.value)
-})
-
-const copy = computed(() => {
-  if (locale.value === 'vi') {
-    return {
-      eyebrow: 'Dang ky',
-      title: 'Tao tai khoan MovieHub',
-      description:
-        'Dang ky nhanh de luu ve, tiep tuc thanh toan va mo rong tai khoan sau nay.',
-      nameLabel: 'Ho va ten',
-      emailLabel: 'Email',
-      passwordLabel: 'Mat khau',
-      confirmPasswordLabel: 'Xac nhan mat khau',
-      submit: 'Tao tai khoan',
-      hasAccount: 'Da co tai khoan?',
-      login: 'Dang nhap',
-    }
-  }
-
-  return {
-    eyebrow: 'Register',
-    title: 'Create your MovieHub account',
-    description:
-      'Sign up to save tickets, continue checkout, and grow this authentication flow later with a real backend.',
-    nameLabel: 'Full name',
-    emailLabel: 'Email',
-    passwordLabel: 'Password',
-    confirmPasswordLabel: 'Confirm password',
-    submit: 'Create account',
-    hasAccount: 'Already have an account?',
-    login: 'Login',
-  }
 })
 
 const redirectTarget = computed(() => {
@@ -284,11 +252,11 @@ const retryRegister = async () => {
           <p
             class="text-sm font-semibold uppercase tracking-[0.24em] text-white/80"
           >
-            {{ copy.eyebrow }}
+            {{ t('authPages.registerEyebrow') }}
           </p>
-          <h1 class="mt-4 text-4xl font-bold">{{ copy.title }}</h1>
+          <h1 class="mt-4 text-4xl font-bold">{{ t('authPages.registerTitle') }}</h1>
           <p class="mt-4 max-w-md text-white/85">
-            {{ copy.description }}
+            {{ t('authPages.registerDescription') }}
           </p>
         </div>
 
@@ -306,7 +274,7 @@ const retryRegister = async () => {
 
           <form class="mt-6 space-y-5" novalidate @submit.prevent="handleRegister">
             <label class="block space-y-2">
-              <span class="text-sm font-medium text-slate-700">{{ copy.nameLabel }}</span>
+              <span class="text-sm font-medium text-slate-700">{{ t('authPages.fullNameLabel') }}</span>
               <input
                 v-model="form.name"
                 type="text"
@@ -324,7 +292,7 @@ const retryRegister = async () => {
             </label>
 
             <label class="block space-y-2">
-              <span class="text-sm font-medium text-slate-700">{{ copy.emailLabel }}</span>
+              <span class="text-sm font-medium text-slate-700">{{ t('authPages.emailLabel') }}</span>
               <input
                 v-model="form.email"
                 type="email"
@@ -342,7 +310,7 @@ const retryRegister = async () => {
             </label>
 
             <label class="block space-y-2">
-              <span class="text-sm font-medium text-slate-700">{{ copy.passwordLabel }}</span>
+              <span class="text-sm font-medium text-slate-700">{{ t('authPages.passwordLabel') }}</span>
               <input
                 v-model="form.password"
                 type="password"
@@ -367,7 +335,7 @@ const retryRegister = async () => {
 
             <label class="block space-y-2">
               <span class="text-sm font-medium text-slate-700">
-                {{ copy.confirmPasswordLabel }}
+                {{ t('authPages.confirmPasswordLabel') }}
               </span>
               <input
                 v-model="form.confirmPassword"
@@ -392,16 +360,16 @@ const retryRegister = async () => {
             <LoadingButton
               type="submit"
               block
-              :label="copy.submit"
+              :label="t('authPages.registerSubmit')"
               :loading="isSubmitting"
-              :loading-label="`${copy.submit}...`"
+              :loading-label="`${t('authPages.registerSubmit')}...`"
             />
           </form>
 
           <p class="mt-6 text-sm text-slate-600">
-            {{ copy.hasAccount }}
+            {{ t('authPages.hasAccount') }}
             <NuxtLink :to="loginLink" class="font-semibold text-primary-600">
-              {{ copy.login }}
+              {{ t('authPages.loginSubmit') }}
             </NuxtLink>
           </p>
         </div>

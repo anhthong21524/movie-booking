@@ -18,6 +18,8 @@ const emit = defineEmits<{
   error: [message: string]
 }>()
 
+const { t } = useI18n()
+
 const fileInput = ref<HTMLInputElement | null>(null)
 const localError = ref('')
 
@@ -31,17 +33,17 @@ const readFileAsDataUrl = (file: File) =>
       resolve(typeof reader.result === 'string' ? reader.result : '')
     }
 
-    reader.onerror = () => reject(new Error('Poster file could not be read.'))
+    reader.onerror = () => reject(new Error(t('posterUpload.readError')))
     reader.readAsDataURL(file)
   })
 
 const validateFile = (file: File) => {
   if (!ADMIN_POSTER_ALLOWED_TYPES.includes(file.type as never)) {
-    return 'Upload a JPG, PNG, or WebP image.'
+    return t('posterUpload.invalidType')
   }
 
   if (file.size > ADMIN_POSTER_MAX_SIZE_BYTES) {
-    return 'Poster image must be 2 MB or smaller.'
+    return t('posterUpload.maxSize')
   }
 
   return ''
@@ -87,7 +89,7 @@ const handleFileChange = async (event: Event) => {
     const message =
       error instanceof Error && error.message.trim()
         ? error.message
-        : 'Poster upload failed. Try again.'
+        : t('posterUpload.uploadFailed')
 
     localError.value = message
     emit('error', message)
@@ -110,15 +112,15 @@ const removePoster = () => {
       <img
         v-if="previewUrl"
         :src="previewUrl"
-        alt="Poster preview"
+        :alt="t('posterUpload.previewAlt')"
         class="h-full min-h-[16rem] w-full object-cover"
       >
       <div v-else class="px-6 text-center text-slate-500">
         <p class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Poster preview
+          {{ t('posterUpload.previewTitle') }}
         </p>
         <p class="mt-3 text-sm leading-6">
-          Upload JPG, PNG, or WebP artwork up to 2 MB. A placeholder will be used if no poster is provided.
+          {{ t('posterUpload.previewDescription') }}
         </p>
       </div>
     </div>
@@ -133,7 +135,7 @@ const removePoster = () => {
           :disabled="disabled || uploadPending"
           @change="handleFileChange"
         >
-        {{ uploadPending ? 'Uploading poster...' : 'Upload poster' }}
+        {{ uploadPending ? t('posterUpload.uploadingButton') : t('posterUpload.uploadButton') }}
       </label>
 
       <button
@@ -143,7 +145,7 @@ const removePoster = () => {
         :disabled="disabled || uploadPending"
         @click="removePoster"
       >
-        Remove poster
+        {{ t('posterUpload.removeButton') }}
       </button>
     </div>
 

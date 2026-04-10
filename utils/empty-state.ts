@@ -6,11 +6,11 @@ const resolveLocale = (locale: AppLocale) => (locale === 'vi' ? 'vi' : 'en')
 export const getMoviesEmptyState = (locale: AppLocale): EmptyStateVm => {
   if (resolveLocale(locale) === 'vi') {
     return {
-      title: 'Chua co phim nao',
+      title: 'Chưa có phim nào',
       description:
-        'Danh sach phim hien dang trong. Hay quay lai trang chu hoac thu lai sau khi catalog duoc cap nhat.',
-      icon: '◌',
-      actionLabel: 'Ve trang chu',
+        'Danh sách phim hiện đang trống. Hãy quay lại trang chủ hoặc thử lại sau khi danh mục được cập nhật.',
+      icon: '○',
+      actionLabel: 'Về trang chủ',
       actionTo: '/',
     }
   }
@@ -19,7 +19,7 @@ export const getMoviesEmptyState = (locale: AppLocale): EmptyStateVm => {
     title: 'No movies available',
     description:
       'The movie catalog is currently empty. Return home or check back when new releases are published.',
-    icon: '◌',
+    icon: '○',
     actionLabel: 'Back home',
     actionTo: '/',
   }
@@ -28,9 +28,9 @@ export const getMoviesEmptyState = (locale: AppLocale): EmptyStateVm => {
 export const getTicketsEmptyState = (locale: AppLocale): EmptyStateVm => {
   if (resolveLocale(locale) === 'vi') {
     return {
-      title: 'Chua co ve nao',
+      title: 'Chưa có vé nào',
       description:
-        'Khi ban hoan tat mot don dat ve, thong tin ve va ma tham chieu se xuat hien tai day.',
+        'Khi bạn hoàn tất một đơn đặt vé, thông tin vé và mã tham chiếu sẽ xuất hiện tại đây.',
       icon: '◍',
       actionLabel: 'Xem phim',
       actionTo: '/movies',
@@ -50,11 +50,11 @@ export const getTicketsEmptyState = (locale: AppLocale): EmptyStateVm => {
 export const getShowtimesEmptyState = (locale: AppLocale): EmptyStateVm => {
   if (resolveLocale(locale) === 'vi') {
     return {
-      title: 'Chua co suat chieu',
+      title: 'Chưa có suất chiếu',
       description:
-        'Phim nay chua co lich chieu kha dung. Hay thu mot phim khac hoac quay lai sau khi lich duoc cap nhat.',
+        'Phim này chưa có lịch chiếu khả dụng. Hãy thử một phim khác hoặc quay lại sau khi lịch được cập nhật.',
       icon: '◔',
-      actionLabel: 'Xem phim khac',
+      actionLabel: 'Xem phim khác',
       actionTo: '/movies',
     }
   }

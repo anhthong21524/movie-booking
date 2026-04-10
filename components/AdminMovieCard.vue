@@ -12,6 +12,12 @@ defineEmits<{
   edit: [movie: Movie]
   delete: [movie: Movie]
 }>()
+
+const { t, locale } = useI18n()
+
+const posterAlt = computed(() =>
+  t('adminMovieCard.posterAlt').replace('{title}', props.movie.title),
+)
 </script>
 
 <template>
@@ -28,14 +34,14 @@ defineEmits<{
         <img
           v-if="props.movie.posterUrl"
           :src="props.movie.posterUrl"
-          :alt="`${props.movie.title} poster`"
+          :alt="posterAlt"
           class="absolute inset-0 h-full w-full object-cover"
         >
         <div
           v-else
           class="flex h-full items-center justify-center px-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
         >
-          No poster
+          {{ t('adminMovieCard.noPoster') }}
         </div>
       </div>
 
@@ -44,12 +50,12 @@ defineEmits<{
           <div>
             <h3 class="text-xl font-bold text-slate-950">{{ props.movie.title }}</h3>
             <p class="mt-1 text-sm text-slate-500">
-              {{ props.movie.genre }} · {{ props.movie.rating }} ·
-              {{ props.movie.durationMinutes }} mins
+              {{ props.movie.genre }} | {{ props.movie.rating }} |
+              {{ props.movie.durationMinutes }} {{ t('common.minutesShort') }}
             </p>
           </div>
           <span class="rounded-full bg-primary-50 px-3 py-1 text-sm font-semibold text-primary-700">
-            {{ formatCurrency(props.movie.basePrice, 'USD', 'en') }}
+            {{ formatCurrency(props.movie.basePrice, 'USD', locale) }}
           </span>
         </div>
 
@@ -59,7 +65,7 @@ defineEmits<{
 
         <div class="mt-5 flex flex-col gap-3 sm:flex-row">
           <button type="button" class="btn-secondary" @click="$emit('edit', props.movie)">
-            Edit movie
+            {{ t('adminMovieCard.edit') }}
           </button>
           <button
             type="button"
@@ -67,7 +73,7 @@ defineEmits<{
             :disabled="deletePending"
             @click="$emit('delete', props.movie)"
           >
-            {{ deletePending ? 'Deleting...' : 'Delete movie' }}
+            {{ deletePending ? t('adminMovieCard.deleting') : t('adminMovieCard.delete') }}
           </button>
         </div>
       </div>

@@ -5,7 +5,7 @@ definePageMeta({ middleware: 'auth', ssr: false })
 
 const userStore = useUserStore()
 const bookingStore = useBookingStore()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { avatarUrl, isUploading, uploadError, upload, remove } = useUserAvatar()
 
 const profile = computed(() => userStore.profile)
@@ -50,29 +50,26 @@ const handleFileChange = async (event: Event) => {
 <template>
   <div class="space-y-8">
     <PageHero
-      title="My Profile"
-      description="Manage your account details and view your booking activity."
+      :title="t('profilePage.heroTitle')"
+      :description="t('profilePage.heroDescription')"
     />
 
     <div class="grid gap-6 lg:grid-cols-[20rem_1fr]">
-      <!-- Left: identity card -->
       <div class="space-y-4">
         <div class="card p-6">
-          <!-- Avatar -->
           <div class="flex flex-col items-center text-center">
             <div class="group relative">
-              <!-- Avatar image or initials -->
               <button
                 type="button"
                 class="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full shadow-soft ring-2 ring-white focus:outline-none focus:ring-primary-400"
                 :class="!avatarUrl ? (userStore.isAdmin ? 'bg-primary-600' : 'bg-primary-500') : ''"
-                :title="isUploading ? 'Uploading…' : 'Change photo'"
+                :title="isUploading ? t('common.uploading') : t('profilePage.changePhoto')"
                 @click="triggerUpload"
               >
                 <img
                   v-if="avatarUrl"
                   :src="avatarUrl"
-                  alt="Profile photo"
+                  :alt="t('profilePage.profilePhotoAlt')"
                   class="h-full w-full object-cover"
                 />
                 <span
@@ -82,7 +79,6 @@ const handleFileChange = async (event: Event) => {
                   {{ initials || '?' }}
                 </span>
 
-                <!-- Hover overlay -->
                 <span
                   class="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
                   :class="{ 'opacity-100': isUploading }"
@@ -95,7 +91,7 @@ const handleFileChange = async (event: Event) => {
                     <path d="M21 12a9 9 0 11-6.219-8.56" />
                   </svg>
                   <span class="text-[10px] font-semibold text-white">
-                    {{ isUploading ? 'Uploading' : 'Change' }}
+                    {{ isUploading ? t('common.uploading') : t('common.change') }}
                   </span>
                 </span>
               </button>
@@ -109,23 +105,21 @@ const handleFileChange = async (event: Event) => {
               />
             </div>
 
-            <!-- Upload error -->
             <p v-if="uploadError" class="mt-2 text-xs text-red-600">{{ uploadError }}</p>
 
-            <!-- Remove photo -->
             <button
               v-if="avatarUrl"
               type="button"
               class="mt-2 text-xs font-medium text-slate-400 underline-offset-2 hover:text-red-500 hover:underline"
               @click="remove"
             >
-              Remove photo
+              {{ t('profilePage.removePhoto') }}
             </button>
 
             <h2 class="mt-4 text-xl font-bold text-slate-950">
-              {{ profile?.name || '—' }}
+              {{ profile?.name || t('common.noValue') }}
             </h2>
-            <p class="mt-0.5 text-sm text-slate-500">{{ profile?.email || '—' }}</p>
+            <p class="mt-0.5 text-sm text-slate-500">{{ profile?.email || t('common.noValue') }}</p>
 
             <span
               class="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
@@ -137,14 +131,15 @@ const handleFileChange = async (event: Event) => {
                 class="h-1.5 w-1.5 rounded-full"
                 :class="userStore.isAdmin ? 'bg-primary-500' : 'bg-slate-400'"
               />
-              {{ userStore.isAdmin ? 'Administrator' : 'Member' }}
+              {{ userStore.isAdmin ? t('profilePage.administrator') : t('profilePage.member') }}
             </span>
           </div>
         </div>
 
-        <!-- Quick links -->
         <div class="card p-5">
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Quick links</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+            {{ t('profilePage.quickLinks') }}
+          </p>
           <div class="mt-3 space-y-1">
             <NuxtLink
               to="/tickets"
@@ -154,7 +149,7 @@ const handleFileChange = async (event: Event) => {
                 <path d="M2 12.5C2 8.91 4.91 6 8.5 6H18l3 3-3 3H8.5C4.91 12 2 9.09 2 5.5" />
                 <path d="M18 12v7a2 2 0 01-2 2H8a2 2 0 01-2-2v-7" />
               </svg>
-              My tickets
+              {{ t('profilePage.myTickets') }}
             </NuxtLink>
             <NuxtLink
               v-if="userStore.isAdmin"
@@ -165,41 +160,38 @@ const handleFileChange = async (event: Event) => {
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
               </svg>
-              Admin panel
+              {{ t('profilePage.adminPanel') }}
             </NuxtLink>
           </div>
         </div>
       </div>
 
-      <!-- Right: activity -->
       <div class="space-y-6">
-        <!-- Booking stats -->
         <div>
-          <h3 class="mb-4 text-lg font-bold text-slate-950">Booking activity</h3>
+          <h3 class="mb-4 text-lg font-bold text-slate-950">{{ t('profilePage.bookingActivity') }}</h3>
           <div class="grid grid-cols-3 gap-4">
             <div class="card p-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Total</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.total') }}</p>
               <p class="mt-2 text-3xl font-bold text-slate-950">
                 {{ bookingStore.bookingHistory.length }}
               </p>
-              <p class="mt-1 text-xs text-slate-500">bookings made</p>
+              <p class="mt-1 text-xs text-slate-500">{{ t('profilePage.bookingsMade') }}</p>
             </div>
 
             <div class="card p-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600">Confirmed</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600">{{ t('profilePage.confirmed') }}</p>
               <p class="mt-2 text-3xl font-bold text-slate-950">{{ confirmedCount }}</p>
-              <p class="mt-1 text-xs text-slate-500">seats reserved</p>
+              <p class="mt-1 text-xs text-slate-500">{{ t('profilePage.seatsReserved') }}</p>
             </div>
 
             <div class="card p-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Cancelled</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.cancelled') }}</p>
               <p class="mt-2 text-3xl font-bold text-slate-950">{{ cancelledCount }}</p>
-              <p class="mt-1 text-xs text-slate-500">bookings cancelled</p>
+              <p class="mt-1 text-xs text-slate-500">{{ t('profilePage.bookingsCancelled') }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Total spend -->
         <div class="card p-6">
           <div class="flex items-center gap-4">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
@@ -209,33 +201,32 @@ const handleFileChange = async (event: Event) => {
               </svg>
             </span>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Total spent</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.totalSpent') }}</p>
               <p class="mt-1 text-2xl font-bold text-slate-950">{{ totalSpendLabel }}</p>
-              <p class="mt-0.5 text-xs text-slate-500">across all confirmed bookings</p>
+              <p class="mt-0.5 text-xs text-slate-500">{{ t('profilePage.acrossConfirmedBookings') }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Account details -->
         <div class="card divide-y divide-border overflow-hidden">
           <div class="px-6 py-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Account details</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.accountDetails') }}</p>
           </div>
 
           <div class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
-            <span class="text-sm font-medium text-slate-500">Display name</span>
-            <span class="text-sm font-semibold text-slate-900">{{ profile?.name || '—' }}</span>
+            <span class="text-sm font-medium text-slate-500">{{ t('profilePage.displayName') }}</span>
+            <span class="text-sm font-semibold text-slate-900">{{ profile?.name || t('common.noValue') }}</span>
           </div>
 
           <div class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
-            <span class="text-sm font-medium text-slate-500">Email</span>
-            <span class="text-sm font-semibold text-slate-900">{{ profile?.email || '—' }}</span>
+            <span class="text-sm font-medium text-slate-500">{{ t('authPages.emailLabel') }}</span>
+            <span class="text-sm font-semibold text-slate-900">{{ profile?.email || t('common.noValue') }}</span>
           </div>
 
           <div v-if="userStore.isAdmin" class="grid grid-cols-[8rem_1fr] items-center gap-4 px-6 py-4">
-            <span class="text-sm font-medium text-slate-500">Role</span>
+            <span class="text-sm font-medium text-slate-500">{{ t('profilePage.role') }}</span>
             <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 ring-1 ring-primary-200">
-              Administrator
+              {{ t('profilePage.administrator') }}
             </span>
           </div>
         </div>
