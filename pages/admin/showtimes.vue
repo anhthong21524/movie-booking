@@ -22,13 +22,14 @@ import {
 
 const { requestLocal } = useApi()
 const { normalize, getMessage } = useApiError()
+const { t } = useI18n()
 
 definePageMeta({
   layout: 'admin',
 })
 
 useSeoMeta({
-  title: 'Admin Showtimes',
+  title: t('adminShowtimesPage.seoTitle'),
 })
 
 const movies = ref<Movie[]>([])
@@ -54,7 +55,7 @@ const roomOptions = computed(() =>
 const movieOptions = computed(() =>
   movies.value.map((movie) => ({
     value: movie.id,
-    label: `${movie.title} · ${movie.durationMinutes} min`,
+    label: `${movie.title} · ${movie.durationMinutes} ${t('common.minutesShort')}`,
   })),
 )
 const draftEvaluation = computed(() =>
@@ -158,7 +159,7 @@ const submitShowtime = async () => {
     )
 
     showtimes.value = [response, ...showtimes.value]
-    successMessage.value = 'Showtime created successfully.'
+    successMessage.value = t('adminShowtimesPage.createSuccess')
     formValues.value = createFollowUpShowtimeFormValues(formValues.value)
     fieldErrors.value = {}
   } catch (error) {
@@ -177,8 +178,8 @@ onMounted(async () => {
 <template>
   <div class="space-y-8">
     <PageHero
-      title="Admin: Showtimes"
-      description="Schedule screenings by movie, cinema, and room with overlap protection before the schedule goes live."
+      :title="t('adminShowtimesPage.heroTitle')"
+      :description="t('adminShowtimesPage.heroDescription')"
     />
 
     <FullPageErrorState
@@ -193,9 +194,9 @@ onMounted(async () => {
     <div v-else class="grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
       <section class="space-y-5">
         <div>
-          <h2 class="text-2xl font-bold text-slate-950">Current schedule</h2>
+          <h2 class="text-2xl font-bold text-slate-950">{{ t('adminShowtimesPage.sectionTitle') }}</h2>
           <p class="mt-2 text-sm leading-6 text-slate-600">
-            Review the existing room schedule before adding another screening. Overlap checks are enforced against this schedule on every create.
+            {{ t('adminShowtimesPage.sectionDescription') }}
           </p>
         </div>
 
@@ -214,22 +215,22 @@ onMounted(async () => {
 
         <PageEmptyState
           v-else-if="!movies.length"
-          title="No movies available for scheduling"
-          description="Create at least one movie in the admin catalog before scheduling a showtime."
-          action-label="Go to admin movies"
+          :title="t('adminShowtimesPage.noMoviesTitle')"
+          :description="t('adminShowtimesPage.noMoviesDescription')"
+          :action-label="t('adminShowtimesPage.noMoviesAction')"
           action-to="/admin/movies"
         />
 
         <PageEmptyState
           v-else-if="!cinemas.length"
-          title="No cinemas available"
-          description="Add a cinema and room catalog before creating showtimes for this admin workspace."
+          :title="t('adminShowtimesPage.noCinemasTitle')"
+          :description="t('adminShowtimesPage.noCinemasDescription')"
         />
 
         <PageEmptyState
           v-else-if="!sortedShowtimes.length"
-          title="No showtimes scheduled yet"
-          description="Use the form to create the first screening. It will appear here immediately after save."
+          :title="t('adminShowtimesPage.noShowtimesTitle')"
+          :description="t('adminShowtimesPage.noShowtimesDescription')"
         />
 
         <div v-else class="space-y-4">
@@ -254,15 +255,15 @@ onMounted(async () => {
               <div class="grid gap-3 sm:grid-cols-2">
                 <div class="rounded-[1.25rem] border border-border bg-slate-50 px-4 py-3">
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Runtime
+                    {{ t('adminShowtimesPage.runtime') }}
                   </p>
                   <p class="mt-2 text-sm font-semibold text-slate-900">
-                    {{ showtime.durationMinutes }} min
+                    {{ showtime.durationMinutes }} {{ t('common.minutesShort') }}
                   </p>
                 </div>
                 <div class="rounded-[1.25rem] border border-border bg-slate-50 px-4 py-3">
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Ticket price
+                    {{ t('adminShowtimesPage.ticketPrice') }}
                   </p>
                   <p class="mt-2 text-sm font-semibold text-slate-900">
                     {{ formatAdminCurrency(showtime.price) }}
@@ -270,10 +271,10 @@ onMounted(async () => {
                 </div>
                 <div class="rounded-[1.25rem] border border-border bg-slate-50 px-4 py-3 sm:col-span-2">
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Time window
+                    {{ t('adminShowtimesPage.timeWindow') }}
                   </p>
                   <p class="mt-2 text-sm font-semibold text-slate-900">
-                    {{ formatAdminDateTime(showtime.startsAt) }} to
+                    {{ formatAdminDateTime(showtime.startsAt) }} {{ t('adminShowtimesPage.to') }}
                     {{ formatAdminDateTime(showtime.endsAt) }}
                   </p>
                 </div>
@@ -299,8 +300,8 @@ onMounted(async () => {
 
         <SectionEmptyState
           v-if="pageStatus === 'ready' && movies.length && cinemas.length && formValues.cinemaId && !roomOptions.length"
-          title="No rooms available for this cinema"
-          description="Choose a different cinema or add rooms to this location before scheduling the showtime."
+          :title="t('adminShowtimesPage.noRoomsTitle')"
+          :description="t('adminShowtimesPage.noRoomsDescription')"
         />
 
         <AdminShowtimeForm

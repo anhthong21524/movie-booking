@@ -6,7 +6,14 @@ const props = defineProps<{
   group: ShowtimeDateGroupVm
 }>()
 
+const { t } = useI18n()
 const isNavigatingTo = ref<string | null>(null)
+
+const showtimeCountLabel = computed(() =>
+  props.group.showtimes.length === 1
+    ? t('movieDetailPage.showtimeSingular')
+    : t('movieDetailPage.showtimePlural'),
+)
 
 const handleSelectShowtime = async (showtimeId: string, disabled: boolean) => {
   if (disabled || isNavigatingTo.value) {
@@ -32,7 +39,7 @@ const handleSelectShowtime = async (showtimeId: string, disabled: boolean) => {
       </div>
       <p class="text-sm text-slate-500">
         {{ props.group.showtimes.length }}
-        {{ props.group.showtimes.length === 1 ? 'showtime' : 'showtimes' }}
+        {{ showtimeCountLabel }}
       </p>
     </div>
 
@@ -66,13 +73,13 @@ const handleSelectShowtime = async (showtimeId: string, disabled: boolean) => {
 
         <div class="mt-5 space-y-2 text-sm">
           <div class="flex items-center justify-between gap-3">
-            <span class="text-slate-500">Starts</span>
+            <span class="text-slate-500">{{ t('movieDetailPage.starts') }}</span>
             <time :datetime="showtime.isoLabel" class="font-medium text-slate-700">
               {{ showtime.dayLabel }}
             </time>
           </div>
           <div class="flex items-center justify-between gap-3">
-            <span class="text-slate-500">Price</span>
+            <span class="text-slate-500">{{ t('movieDetailPage.price') }}</span>
             <span class="font-semibold text-slate-950">{{ showtime.priceLabel }}</span>
           </div>
         </div>
@@ -94,7 +101,7 @@ const handleSelectShowtime = async (showtimeId: string, disabled: boolean) => {
         >
           {{
             isNavigatingTo === showtime.id
-              ? 'Opening booking...'
+              ? t('movieDetailPage.openingBooking')
               : showtime.action.disabledReason || showtime.action.label
           }}
         </button>

@@ -3,6 +3,7 @@ defineProps<{
   open: boolean
   title: string
   description: string
+  heading?: string
   confirmLabel?: string
   cancelLabel?: string
   pending?: boolean
@@ -22,7 +23,7 @@ defineEmits<{
     >
       <div class="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl">
         <p class="text-sm font-semibold uppercase tracking-[0.18em] text-rose-600">
-          Confirm delete
+          {{ heading }}
         </p>
         <h2 class="mt-3 text-2xl font-bold text-slate-950">{{ title }}</h2>
         <p class="mt-3 text-sm leading-6 text-slate-600">{{ description }}</p>
@@ -34,13 +35,13 @@ defineEmits<{
             :disabled="pending"
             @click="$emit('cancel')"
           >
-            {{ cancelLabel || 'Cancel' }}
+            {{ cancelLabel || '' }}
           </button>
           <LoadingButton
             variant="primary"
-            :label="confirmLabel || 'Delete movie'"
+            :label="confirmLabel || ''"
             :loading="pending"
-            :loading-label="`${confirmLabel || 'Delete movie'}...`"
+            :loading-label="`${confirmLabel || ''}...`"
             @click="$emit('confirm')"
           />
         </div>

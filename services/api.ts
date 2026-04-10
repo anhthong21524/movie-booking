@@ -1,4 +1,5 @@
 import { normalizeApiError } from '~/utils/app-error'
+import { isAppError } from '~/utils/app-error'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -55,7 +56,14 @@ class ApiService {
         },
       })
     } catch (error) {
-      throw normalizeApiError(error)
+      const normalizedError = normalizeApiError(error)
+
+      if (import.meta.client && isAppError(normalizedError) && normalizedError.category === 'unauthorized') {
+        const appAuth = useAppAuth()
+        void appAuth.handleExpiredSession()
+      }
+
+      throw normalizedError
     }
   }
 }

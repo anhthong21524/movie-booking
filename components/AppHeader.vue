@@ -16,22 +16,22 @@ const { locale, setLocale, t } = useI18n()
 
 const authCopy = computed(() => {
   if (locale.value === 'vi') {
-      return {
-        login: 'Dang nhap',
-        register: 'Dang ky',
-        logout: 'Dang xuat',
-        loggingOut: 'Dang dang xuat...',
-        welcome: 'Xin chao',
-      }
-    }
-
     return {
-      login: 'Login',
-      register: 'Register',
-      logout: 'Logout',
-      loggingOut: 'Signing out...',
-      welcome: 'Hello',
+      login: t('authPages.loginSubmit'),
+      register: t('authPages.registerSeoTitle'),
+      logout: 'Đăng xuất',
+      loggingOut: 'Đang đăng xuất...',
+      welcome: 'Xin chào',
     }
+  }
+
+  return {
+    login: t('authPages.loginSubmit'),
+    register: t('authPages.registerSeoTitle'),
+    logout: 'Logout',
+    loggingOut: 'Signing out...',
+    welcome: 'Hello',
+  }
 })
 
 const publicNavigation = computed(() =>
@@ -90,7 +90,7 @@ const registerLink = computed(() => ({
 
 const isLoggingOut = computed(() => userStore.status === 'logging_out')
 const greetingClass = computed(() =>
-  userStore.isAdmin ? 'text-primary-700' : 'text-slate-900'
+  userStore.isAdmin ? 'text-primary-700' : 'text-slate-900',
 )
 
 const handleLogout = async () => {
@@ -226,7 +226,6 @@ const handleLogout = async () => {
           </div>
         </div>
       </div>
-
     </div>
   </header>
 </template>

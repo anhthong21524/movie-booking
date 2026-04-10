@@ -21,10 +21,10 @@ const route = useRoute()
 const appAuth = useAppAuth()
 const userStore = useUserStore()
 const { getProviders, signIn } = useAuth()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 useSeoMeta({
-  title: 'Login',
+  title: t('authPages.loginSeoTitle'),
 })
 
 const form = reactive<CredentialsSignInBody>({
@@ -53,39 +53,6 @@ const validationMessages = computed(() => {
   return getAuthValidationMessages(locale.value)
 })
 
-const copy = computed(() => {
-  if (locale.value === 'vi') {
-    return {
-      eyebrow: 'Tai khoan',
-      title: 'Dang nhap de tiep tuc dat ve',
-      description:
-        'Su dung email va mat khau hoac Google de quay lai luong dat ve cua ban.',
-      emailLabel: 'Email',
-      passwordLabel: 'Mat khau',
-      submit: 'Dang nhap',
-      google: 'Tiep tuc voi Google',
-      noAccount: 'Chua co tai khoan?',
-      register: 'Tao tai khoan',
-      registeredSuccess:
-        'Dang ky thanh cong. Ban co the dang nhap ngay bay gio.',
-    }
-  }
-
-  return {
-    eyebrow: 'Account',
-    title: 'Sign in to continue booking',
-    description:
-      'Use your email and password or continue with Google to return to your booking flow.',
-    emailLabel: 'Email',
-    passwordLabel: 'Password',
-    submit: 'Login',
-    google: 'Continue with Google',
-    noAccount: "Don't have an account?",
-    register: 'Create one',
-    registeredSuccess: 'Registration successful. You can sign in now.',
-  }
-})
-
 const redirectTarget = computed(() => {
   return (
     sanitizeRedirectTarget(route.query[REDIRECT_QUERY_KEY]) ||
@@ -95,7 +62,7 @@ const redirectTarget = computed(() => {
 
 const successMessage = computed(() => {
   return route.query[REGISTER_SUCCESS_QUERY_KEY] === '1'
-    ? copy.value.registeredSuccess
+    ? t('authPages.registeredSuccess')
     : ''
 })
 
@@ -280,12 +247,10 @@ const handleGoogleLogin = async () => {
         >
           <p
             class="text-sm font-semibold uppercase tracking-[0.24em] text-white/80"
-          >
-            {{ copy.eyebrow }}
-          </p>
-          <h1 class="mt-4 text-4xl font-bold">{{ copy.title }}</h1>
+          >{{ t('authPages.loginEyebrow') }}</p>
+          <h1 class="mt-4 text-4xl font-bold">{{ t('authPages.loginTitle') }}</h1>
           <p class="mt-4 max-w-md text-white/85">
-            {{ copy.description }}
+            {{ t('authPages.loginDescription') }}
           </p>
         </div>
 
@@ -306,7 +271,7 @@ const handleGoogleLogin = async () => {
 
           <form class="mt-6 space-y-5" novalidate @submit.prevent="handleCredentialsLogin">
             <label class="block space-y-2">
-              <span class="text-sm font-medium text-slate-700">{{ copy.emailLabel }}</span>
+              <span class="text-sm font-medium text-slate-700">{{ t('authPages.emailLabel') }}</span>
               <input
                 v-model="form.email"
                 type="email"
@@ -324,7 +289,7 @@ const handleGoogleLogin = async () => {
             </label>
 
             <label class="block space-y-2">
-              <span class="text-sm font-medium text-slate-700">{{ copy.passwordLabel }}</span>
+              <span class="text-sm font-medium text-slate-700">{{ t('authPages.passwordLabel') }}</span>
               <input
                 v-model="form.password"
                 type="password"
@@ -346,9 +311,9 @@ const handleGoogleLogin = async () => {
             <LoadingButton
               type="submit"
               block
-              :label="copy.submit"
+              :label="t('authPages.loginSubmit')"
               :loading="isSubmitting"
-              :loading-label="`${copy.submit}...`"
+              :loading-label="`${t('authPages.loginSubmit')}...`"
             />
           </form>
 
@@ -356,17 +321,17 @@ const handleGoogleLogin = async () => {
             class="mt-4"
             variant="secondary"
             block
-            :label="copy.google"
+            :label="t('authPages.continueWithGoogle')"
             :loading="isGoogleSubmitting"
-            :loading-label="`${copy.google}...`"
+            :loading-label="`${t('authPages.continueWithGoogle')}...`"
             :disabled="!hasGoogleProvider"
             @click="handleGoogleLogin"
           />
 
           <p class="mt-6 text-sm text-slate-600">
-            {{ copy.noAccount }}
+            {{ t('authPages.noAccount') }}
             <NuxtLink :to="registerLink" class="font-semibold text-primary-600">
-              {{ copy.register }}
+              {{ t('authPages.createAccount') }}
             </NuxtLink>
           </p>
         </div>

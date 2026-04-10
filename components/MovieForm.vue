@@ -27,6 +27,8 @@ const emit = defineEmits<{
   reset: []
 }>()
 
+const { t } = useI18n()
+
 const touched = reactive<Record<AdminMovieFormField, boolean>>({
   title: false,
   durationMinutes: false,
@@ -97,7 +99,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
     >
       <div class="grid gap-5 lg:grid-cols-2">
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Title</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.title') }}</span>
           <input
             :value="values.title"
             type="text"
@@ -109,7 +111,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Genre</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.genre') }}</span>
           <input
             :value="values.genre"
             type="text"
@@ -121,7 +123,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Duration (minutes)</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.durationMinutes') }}</span>
           <input
             :value="values.durationMinutes"
             type="number"
@@ -138,11 +140,11 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Rating</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.rating') }}</span>
           <input
             :value="values.rating"
             type="text"
-            placeholder="PG-13"
+            :placeholder="t('movieForm.placeholderRating')"
             :class="getInputClass('rating')"
             @input="updateField('rating', ($event.target as HTMLInputElement).value)"
             @blur="touched.rating = true"
@@ -151,7 +153,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Release date</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.releaseDate') }}</span>
           <input
             :value="values.releaseDate"
             type="date"
@@ -166,7 +168,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Base ticket price</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.baseTicketPrice') }}</span>
           <input
             :value="values.basePrice"
             type="number"
@@ -181,23 +183,23 @@ const getVisibleError = (field: AdminMovieFormField) => {
         </label>
 
         <label class="block space-y-2">
-          <span class="text-sm font-medium text-slate-700">Status</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('movieForm.status') }}</span>
           <select
             :value="values.status"
             :class="getInputClass('status')"
             @change="updateField('status', ($event.target as HTMLSelectElement).value)"
             @blur="touched.status = true"
           >
-            <option value="NOW_SHOWING">Now showing</option>
-            <option value="COMING_SOON">Coming soon</option>
-            <option value="ARCHIVED">Archived</option>
+            <option value="NOW_SHOWING">{{ t('movieForm.statusNowShowing') }}</option>
+            <option value="COMING_SOON">{{ t('movieForm.statusComingSoon') }}</option>
+            <option value="ARCHIVED">{{ t('movieForm.statusArchived') }}</option>
           </select>
           <FieldErrorText id="movie-status-error" :message="getVisibleError('status')" />
         </label>
       </div>
 
       <label class="block space-y-2">
-        <span class="text-sm font-medium text-slate-700">Description</span>
+        <span class="text-sm font-medium text-slate-700">{{ t('movieForm.description') }}</span>
         <textarea
           :value="values.description"
           rows="5"
@@ -212,7 +214,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
       </label>
 
       <div class="space-y-2">
-        <span class="text-sm font-medium text-slate-700">Poster</span>
+        <span class="text-sm font-medium text-slate-700">{{ t('movieForm.poster') }}</span>
         <PosterUpload
           :model-value="values.posterUrl"
           :upload-pending="uploadPending"
@@ -234,7 +236,7 @@ const getVisibleError = (field: AdminMovieFormField) => {
 
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button type="button" class="btn-secondary" @click="$emit('reset')">
-          Reset form
+          {{ t('movieForm.reset') }}
         </button>
         <LoadingButton
           type="submit"
