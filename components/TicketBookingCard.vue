@@ -70,7 +70,7 @@ const { t } = useI18n()
       <!-- Body: info columns + QR -->
       <div class="grid gap-6 xl:grid-cols-[1fr_9rem]">
         <!-- Info -->
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="grid gap-4 lg:grid-cols-3">
           <!-- Showtime -->
           <div
             class="flex items-start gap-3 rounded-2xl border border-border bg-slate-50 p-4"
@@ -129,7 +129,7 @@ const { t } = useI18n()
 
           <!-- Seats -->
           <div
-            class="flex items-start gap-3 rounded-2xl border border-border bg-slate-50 p-4 sm:col-span-2"
+            class="flex items-start gap-3 rounded-2xl border border-border bg-slate-50 p-4"
           >
             <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
