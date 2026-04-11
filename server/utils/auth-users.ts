@@ -84,14 +84,24 @@ export const registerUser = async (input: {
 export const findOrCreateOAuthUser = async (input: {
   name?: string | null
   email: string
-}): Promise<AuthSessionUser> => {
-  const fallbackName =
-    input.name?.trim() || input.email.split('@')[0] || 'Movie User'
+}): Promise<AuthSessionUser & { accessToken: string }> => {
+  const normalizedEmail = normalizeEmail(input.email)
+
+  const data = await $fetch<BackendAuthResponse>(
+    `${backendUrl()}/api/v1/auth/oauth`,
+    {
+      method: 'POST',
+      body: { email: normalizedEmail },
+    },
+  )
+
+  const nameFromEmail = data.user.email.split('@')[0] ?? 'User'
 
   return {
-    id: normalizeEmail(input.email),
-    name: fallbackName,
-    email: normalizeEmail(input.email),
-    role: 'USER' as AuthRole,
+    id: String(data.user.id),
+    name: input.name?.trim() || nameFromEmail,
+    email: data.user.email,
+    role: (data.user.role === 'ADMIN' ? 'ADMIN' : 'USER') as AuthRole,
+    accessToken: data.accessToken,
   }
 }

@@ -122,6 +122,7 @@ const authOptions: AuthOptions = {
       user.name = oauthUser.name
       user.email = oauthUser.email
       user.role = oauthUser.role
+      user.accessToken = oauthUser.accessToken
 
       return true
     },
@@ -152,7 +153,8 @@ const authOptions: AuthOptions = {
         token.name = oauthUser.name
         token.email = oauthUser.email
         token.role = oauthUser.role
-        token.hasApiAccess = false
+        token.accessToken = oauthUser.accessToken
+        token.hasApiAccess = true
       }
 
       return token

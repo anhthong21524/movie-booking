@@ -142,6 +142,12 @@ export const useBookingStore = defineStore('booking', () => {
 
     booking.value = parseStoredBooking(window.localStorage.getItem(BOOKING_STORAGE_KEY))
     hydrateBookingHistory(true)
+
+     if (!bookingHistory.value.length && booking.value?.status === 'CONFIRMED') {
+      bookingHistory.value = [booking.value]
+      persistBookingHistory()
+    }
+
     hasHydrated.value = true
   }
 
@@ -162,6 +168,11 @@ export const useBookingStore = defineStore('booking', () => {
   const fetchBookingHistory = async () => {
     hydrateBooking()
     hydrateBookingHistory(true)
+
+    if (!bookingHistory.value.length && booking.value?.status === 'CONFIRMED') {
+      bookingHistory.value = [booking.value]
+      persistBookingHistory()
+    }
 
     if (!hasApiAccess()) {
       return bookingHistory.value
