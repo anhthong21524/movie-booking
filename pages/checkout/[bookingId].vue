@@ -12,7 +12,7 @@ const { request } = useApi()
 const { getMessage } = useApiError()
 
 const submitState = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
-const submitMessage = ref('Review your booking details before you confirm.')
+const submitMessage = ref(t('checkoutPage.reviewMessage'))
 
 const bookingId = computed(() =>
   typeof route.params.bookingId === 'string' ? route.params.bookingId : '',
@@ -99,19 +99,19 @@ watch(
   (nextBooking) => {
     if (!nextBooking) {
       submitState.value = 'error'
-      submitMessage.value = 'No booking draft was found. Return to seat selection and choose your seats again.'
+      submitMessage.value = t('checkoutPage.noBookingDraft')
       return
     }
 
     if (nextBooking.status === 'CONFIRMED') {
       submitState.value = 'success'
-      submitMessage.value = 'Booking confirmed. You can keep this page open while payment and ticket issuance are added.'
+      submitMessage.value = t('checkoutPage.alreadyConfirmedMessage')
       return
     }
 
     if (submitState.value !== 'submitting') {
       submitState.value = 'idle'
-      submitMessage.value = 'Review your booking details before you confirm.'
+      submitMessage.value = t('checkoutPage.reviewMessage')
     }
   },
   { immediate: true },
@@ -123,7 +123,7 @@ const handleConfirmBooking = async () => {
   }
 
   submitState.value = 'submitting'
-  submitMessage.value = 'Confirming your booking and locking the selected seats.'
+  submitMessage.value = t('checkoutPage.confirmingMessage')
 
   try {
     const confirmedBooking = await request<Booking>(
@@ -142,10 +142,10 @@ const handleConfirmBooking = async () => {
     }
 
     submitState.value = 'success'
-    submitMessage.value = 'Booking confirmed. You can keep this page open while payment and ticket issuance are added.'
+    submitMessage.value = t('checkoutPage.alreadyConfirmedMessage')
   } catch {
     submitState.value = 'error'
-    submitMessage.value = 'We could not confirm the booking. Please retry or return to seat selection.'
+    submitMessage.value = t('checkoutPage.confirmError')
   }
 }
 

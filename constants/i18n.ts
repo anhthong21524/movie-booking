@@ -87,9 +87,39 @@ export const messages = {
       screen: 'Screen',
       summaryTitle: 'Booking summary',
       showtime: 'Showtime',
+      starts: 'Starts',
+      seatPrice: 'Seat price',
+      available: 'Available',
+      selected: 'Selected',
+      availableNow: 'Available now',
+      booked: 'Booked',
+      unavailable: 'Unavailable',
+      selectedSeats: 'Selected seats',
+      emptySelectedSeats: 'Pick at least one available seat to continue.',
+      openingCheckout: 'Opening checkout...',
       selectableSeats: 'Selectable seats',
       continueToCheckout: 'Continue to checkout',
       showtimeNotFound: 'Showtime not found',
+      scheduleUnavailable: 'Schedule unavailable',
+      unavailableTitle: 'This showtime is unavailable',
+      unavailableDescription:
+        'The selected session could not be found. Return to movies and choose another showtime.',
+      seatLoadErrorTitle: 'We could not load the seat map',
+      seatLoadErrorDescription:
+        'Refresh the page to retry. If the issue persists, return to the movie detail page and choose the session again.',
+      malformedSeatLayoutTitle: 'Seat layout is temporarily unavailable',
+      malformedSeatLayoutDescription:
+        'The seat map data for this session is malformed, so booking cannot continue until it is corrected.',
+      unpublishedSeatMapTitle: 'Seat map not published',
+      unpublishedSeatMapDescription:
+        'This session does not have a seat layout yet. Choose another showtime or come back later.',
+      malformedSeatsBanner:
+        '{count} malformed seat {noun} hidden before rendering.',
+      noAvailableSeatsBanner:
+        'All seats for this session are currently unavailable. You can review the layout, but checkout is disabled.',
+      bookingPreparationDescription:
+        'The selected session could not be prepared for booking. Return to movies and choose another showtime.',
+      backToMovies: 'Back to movies',
     },
     checkoutPage: {
       heroTitle: 'Checkout',
@@ -97,7 +127,38 @@ export const messages = {
         'Review your selected seats and confirm the booking summary.',
       selectedSeats: 'Selected seats',
       paymentSummary: 'Payment summary',
+      bookingSummary: 'Booking summary',
+      room: 'Room',
+      starts: 'Starts',
+      confirmationTitle: 'Confirmation',
+      seats: 'Seats',
+      seatPrice: 'Seat price',
+      subtotal: 'Subtotal',
+      fees: 'Fees',
+      discounts: 'Discounts',
       total: 'Total',
+      confirmed: 'Confirmed',
+      pendingConfirmation: 'Pending confirmation',
+      selectedMovie: 'Selected movie',
+      seatSummary: '{count} seat selected',
+      seatSummaryPlural: '{count} seats selected',
+      confirmedGuidance:
+        'This booking has already been confirmed. Keep this page open until payment and ticket issuance are added.',
+      pendingGuidance:
+        'Review the booking carefully before confirming. Totals are recalculated from the active showtime price and current seat availability.',
+      reviewMessage: 'Review your booking details before you confirm.',
+      noBookingDraft:
+        'No booking draft was found. Return to seat selection and choose your seats again.',
+      alreadyConfirmedMessage:
+        'Booking confirmed. You can keep this page open while payment and ticket issuance are added.',
+      confirmingMessage:
+        'Confirming your booking and locking the selected seats.',
+      confirmError:
+        'We could not confirm the booking. Please retry or return to seat selection.',
+      confirmBooking: 'Confirm booking',
+      bookingConfirmed: 'Booking confirmed',
+      confirmingBooking: 'Confirming booking...',
+      backToSeats: 'Back to seats',
       noBookingTitle: 'No booking in progress',
       noBookingDescription:
         'Start from a showtime and select seats to populate checkout details.',
@@ -107,6 +168,30 @@ export const messages = {
       heroTitle: 'Your tickets',
       heroDescription:
         'Access upcoming bookings, ticket details, and future ticket history.',
+      totalBookings: 'Total bookings',
+      confirmed: 'Confirmed',
+      cancelled: 'Cancelled',
+      hiddenTitle: 'Some bookings were hidden',
+      hiddenDescription:
+        '{count} malformed booking records were hidden because required ticket data was missing or invalid.',
+      listTitle: 'Your bookings',
+      bookingSingular: 'booking',
+      bookingPlural: 'bookings',
+      malformedTitle: 'Booking history is temporarily unavailable',
+      malformedDescription:
+        'All saved bookings were malformed or linked to invalid showtimes, so tickets could not be rendered safely.',
+      movieTicket: 'Movie ticket',
+      showtime: 'Showtime',
+      booked: 'Booked',
+      total: 'Total',
+      seatsReserved: 'Seats · {count} reserved',
+      scanAtEntrance: 'Scan at entrance',
+      qrComingSoon: 'QR delivery coming soon',
+      upcoming: 'Upcoming',
+      pending: 'Pending',
+      cancelledStatus: 'Cancelled',
+      ticketNoLongerValid: 'Ticket no longer valid',
+      movieUnavailable: 'Movie unavailable',
       emptyTitle: 'No tickets yet',
       emptyDescription:
         'Purchased tickets will appear here once a booking is completed.',
@@ -405,9 +490,39 @@ export const messages = {
       screen: 'Màn hình',
       summaryTitle: 'Tóm tắt đặt vé',
       showtime: 'Suất chiếu',
+      starts: 'Bắt đầu',
+      seatPrice: 'Giá ghế',
+      available: 'Còn trống',
+      selected: 'Đã chọn',
+      availableNow: 'Còn trống',
+      booked: 'Đã đặt',
+      unavailable: 'Không khả dụng',
+      selectedSeats: 'Ghế đã chọn',
+      emptySelectedSeats: 'Hãy chọn ít nhất một ghế còn trống để tiếp tục.',
+      openingCheckout: 'Đang mở trang thanh toán...',
       selectableSeats: 'Ghế có thể chọn',
       continueToCheckout: 'Tiếp tục thanh toán',
       showtimeNotFound: 'Không tìm thấy suất chiếu',
+      scheduleUnavailable: 'Lịch chiếu chưa khả dụng',
+      unavailableTitle: 'Suất chiếu này hiện không khả dụng',
+      unavailableDescription:
+        'Không tìm thấy suất chiếu được chọn. Hãy quay lại trang phim và chọn suất khác.',
+      seatLoadErrorTitle: 'Không thể tải sơ đồ ghế',
+      seatLoadErrorDescription:
+        'Hãy làm mới trang để thử lại. Nếu lỗi vẫn tiếp diễn, hãy quay lại trang chi tiết phim và chọn lại suất chiếu.',
+      malformedSeatLayoutTitle: 'Sơ đồ ghế tạm thời không khả dụng',
+      malformedSeatLayoutDescription:
+        'Dữ liệu sơ đồ ghế của suất chiếu này bị lỗi nên không thể tiếp tục đặt vé cho đến khi được sửa.',
+      unpublishedSeatMapTitle: 'Chưa có sơ đồ ghế',
+      unpublishedSeatMapDescription:
+        'Suất chiếu này chưa có sơ đồ ghế. Hãy chọn suất chiếu khác hoặc quay lại sau.',
+      malformedSeatsBanner:
+        'Đã ẩn {count} bản ghi ghế bị lỗi trước khi hiển thị.',
+      noAvailableSeatsBanner:
+        'Tất cả ghế của suất chiếu này hiện đều không khả dụng. Bạn vẫn có thể xem sơ đồ, nhưng không thể tiếp tục thanh toán.',
+      bookingPreparationDescription:
+        'Không thể chuẩn bị suất chiếu được chọn cho quy trình đặt vé. Hãy quay lại trang phim và chọn suất khác.',
+      backToMovies: 'Quay lại trang phim',
     },
     checkoutPage: {
       heroTitle: 'Thanh toán',
@@ -415,7 +530,38 @@ export const messages = {
         'Kiểm tra lại ghế đã chọn và tổng quan đơn đặt vé trước khi xác nhận.',
       selectedSeats: 'Ghế đã chọn',
       paymentSummary: 'Tóm tắt thanh toán',
+      bookingSummary: 'Tóm tắt đặt vé',
+      room: 'Phòng',
+      starts: 'Bắt đầu',
+      confirmationTitle: 'Xác nhận',
+      seats: 'Ghế',
+      seatPrice: 'Giá ghế',
+      subtotal: 'Tạm tính',
+      fees: 'Phí',
+      discounts: 'Giảm giá',
       total: 'Tổng cộng',
+      confirmed: 'Đã xác nhận',
+      pendingConfirmation: 'Chờ xác nhận',
+      selectedMovie: 'Phim đã chọn',
+      seatSummary: '{count} ghế đã chọn',
+      seatSummaryPlural: '{count} ghế đã chọn',
+      confirmedGuidance:
+        'Đơn đặt vé này đã được xác nhận. Hãy giữ trang này mở cho đến khi tính năng thanh toán và xuất vé được bổ sung.',
+      pendingGuidance:
+        'Hãy kiểm tra kỹ đơn đặt vé trước khi xác nhận. Tổng tiền được tính lại theo giá suất chiếu hiện tại và tình trạng ghế mới nhất.',
+      reviewMessage: 'Hãy kiểm tra thông tin đặt vé trước khi xác nhận.',
+      noBookingDraft:
+        'Không tìm thấy đơn đặt vé tạm. Hãy quay lại bước chọn ghế và chọn lại ghế của bạn.',
+      alreadyConfirmedMessage:
+        'Đặt vé đã được xác nhận. Bạn có thể giữ trang này mở trong khi chờ bổ sung thanh toán và xuất vé.',
+      confirmingMessage:
+        'Đang xác nhận đơn đặt vé và khóa các ghế đã chọn.',
+      confirmError:
+        'Không thể xác nhận đơn đặt vé. Vui lòng thử lại hoặc quay lại bước chọn ghế.',
+      confirmBooking: 'Xác nhận đặt vé',
+      bookingConfirmed: 'Đặt vé đã được xác nhận',
+      confirmingBooking: 'Đang xác nhận đặt vé...',
+      backToSeats: 'Quay lại chọn ghế',
       noBookingTitle: 'Chưa có đơn đặt vé',
       noBookingDescription:
         'Hãy bắt đầu từ một suất chiếu và chọn ghế để tạo thông tin thanh toán.',
@@ -425,6 +571,30 @@ export const messages = {
       heroTitle: 'Vé của bạn',
       heroDescription:
         'Theo dõi vé đã đặt, thông tin suất chiếu và lịch sử vé trong tương lai.',
+      totalBookings: 'Tổng lượt đặt',
+      confirmed: 'Đã xác nhận',
+      cancelled: 'Đã hủy',
+      hiddenTitle: 'Một số đơn đặt vé đã bị ẩn',
+      hiddenDescription:
+        'Đã ẩn {count} bản ghi đặt vé bị lỗi vì thiếu hoặc sai dữ liệu vé bắt buộc.',
+      listTitle: 'Đơn đặt vé của bạn',
+      bookingSingular: 'đơn đặt vé',
+      bookingPlural: 'đơn đặt vé',
+      malformedTitle: 'Lịch sử đặt vé tạm thời không khả dụng',
+      malformedDescription:
+        'Tất cả đơn đã lưu đều bị lỗi hoặc liên kết tới suất chiếu không hợp lệ nên không thể hiển thị vé an toàn.',
+      movieTicket: 'Vé xem phim',
+      showtime: 'Suất chiếu',
+      booked: 'Đặt lúc',
+      total: 'Tổng',
+      seatsReserved: 'Ghế · {count} đã giữ',
+      scanAtEntrance: 'Quét tại cổng vào',
+      qrComingSoon: 'Mã QR sẽ sớm được cung cấp',
+      upcoming: 'Sắp tới',
+      pending: 'Đang chờ',
+      cancelledStatus: 'Đã hủy',
+      ticketNoLongerValid: 'Vé không còn hiệu lực',
+      movieUnavailable: 'Phim hiện không khả dụng',
       emptyTitle: 'Chưa có vé nào',
       emptyDescription:
         'Vé đã mua sẽ xuất hiện ở đây sau khi đặt vé hoàn tất.',

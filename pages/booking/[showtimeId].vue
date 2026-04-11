@@ -25,8 +25,8 @@ const {
 } = useShowtimeSeats(showtimeId)
 
 const isNavigatingToCheckout = ref(false)
-const interactionMessage = ref('Select an available seat to start your booking.')
 const selectedSeatIds = ref<string[]>([])
+const interactionMessage = ref(t('bookingPage.emptySelectedSeats'))
 
 const showtimeStartsAtLabel = computed(() => {
   if (!showtime.value) {
@@ -36,7 +36,7 @@ const showtimeStartsAtLabel = computed(() => {
   const parsed = new Date(showtime.value.startsAt)
 
   if (Number.isNaN(parsed.getTime())) {
-    return 'Schedule unavailable'
+    return t('bookingPage.scheduleUnavailable')
   }
 
   return new Intl.DateTimeFormat(locale.value, {
@@ -49,7 +49,7 @@ const normalizedSeatData = computed(() => normalizeSeatRecords(seats.value))
 const normalizedSeats = computed(() => normalizedSeatData.value.seats)
 
 const seatGridRows = computed(() =>
-  buildSeatGridRows(normalizedSeats.value, selectedSeatIds.value),
+  buildSeatGridRows(normalizedSeats.value, selectedSeatIds.value, locale.value),
 )
 
 const selectionSummary = computed(() =>
@@ -67,7 +67,12 @@ watch(normalizedSeats, (seats) => {
     return
   }
 
-  const validation = validateSeatSelection(seats, selectedSeatIds.value)
+  const validation = validateSeatSelection(
+    seats,
+    selectedSeatIds.value,
+    undefined,
+    locale.value,
+  )
   selectedSeatIds.value = validation.nextSelectedIds
 })
 
@@ -76,6 +81,8 @@ const handleSeatToggle = (seatId: string) => {
     normalizedSeats.value,
     selectedSeatIds.value,
     seatId,
+    undefined,
+    locale.value,
   )
 
   selectedSeatIds.value = result.nextSelectedIds
@@ -87,12 +94,17 @@ const handleContinueToCheckout = async () => {
     return
   }
 
-  const validation = validateSeatSelection(normalizedSeats.value, selectedSeatIds.value)
+  const localizedValidation = validateSeatSelection(
+    normalizedSeats.value,
+    selectedSeatIds.value,
+    undefined,
+    locale.value,
+  )
 
-  selectedSeatIds.value = validation.nextSelectedIds
-  interactionMessage.value = validation.message
+  selectedSeatIds.value = localizedValidation.nextSelectedIds
+  interactionMessage.value = localizedValidation.message
 
-  if (!validation.valid) {
+  if (!localizedValidation.valid) {
     return
   }
 
@@ -101,7 +113,7 @@ const handleContinueToCheckout = async () => {
   try {
     const draftBooking = await bookingStore.startBooking(
       showtime.value.id,
-      validation.nextSelectedIds,
+      localizedValidation.nextSelectedIds,
     )
 
     await navigateTo(buildCheckoutRoute(draftBooking.id))
@@ -116,6 +128,13 @@ const unitPriceLabel = computed(() =>
 
 const malformedSeatCount = computed(() =>
   normalizedSeatData.value.malformedSeatCount,
+)
+
+const malformedSeatsBanner = computed(() =>
+  t('bookingPage.malformedSeatsBanner').replace(
+    '{count}',
+    String(malformedSeatCount.value),
+  ),
 )
 
 const hasAnyAvailableSeat = computed(() =>
@@ -185,33 +204,33 @@ watch(showtimeId, async () => {
 
     <EmptyState
       v-else-if="!showtime && !seatError"
-      title="This showtime is unavailable"
-      description="The selected session could not be found. Return to movies and choose another showtime."
-      action-label="Back to movies"
+      :title="t('bookingPage.unavailableTitle')"
+      :description="t('bookingPage.unavailableDescription')"
+      :action-label="t('bookingPage.backToMovies')"
       action-to="/movies"
     />
 
     <EmptyState
       v-else-if="seatError"
-      title="We could not load the seat map"
-      description="Refresh the page to retry. If the issue persists, return to the movie detail page and choose the session again."
-      action-label="Back to movies"
+      :title="t('bookingPage.seatLoadErrorTitle')"
+      :description="t('bookingPage.seatLoadErrorDescription')"
+      :action-label="t('bookingPage.backToMovies')"
       action-to="/movies"
     />
 
     <EmptyState
       v-else-if="!normalizedSeats.length && malformedSeatCount > 0"
-      title="Seat layout is temporarily unavailable"
-      description="The seat map data for this session is malformed, so booking cannot continue until it is corrected."
-      action-label="Back to movies"
+      :title="t('bookingPage.malformedSeatLayoutTitle')"
+      :description="t('bookingPage.malformedSeatLayoutDescription')"
+      :action-label="t('bookingPage.backToMovies')"
       action-to="/movies"
     />
 
     <EmptyState
       v-else-if="!normalizedSeats.length"
-      title="Seat map not published"
-      description="This session does not have a seat layout yet. Choose another showtime or come back later."
-      action-label="Back to movies"
+      :title="t('bookingPage.unpublishedSeatMapTitle')"
+      :description="t('bookingPage.unpublishedSeatMapDescription')"
+      :action-label="t('bookingPage.backToMovies')"
       action-to="/movies"
     />
 
@@ -221,16 +240,14 @@ watch(showtimeId, async () => {
           v-if="malformedSeatCount"
           class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
         >
-          {{
-            `${malformedSeatCount} malformed seat ${malformedSeatCount === 1 ? 'record was' : 'records were'} hidden before rendering.`
-          }}
+          {{ malformedSeatsBanner }}
         </div>
 
         <div
           v-if="!hasAnyAvailableSeat"
           class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700"
         >
-          All seats for this session are currently unavailable. You can review the layout, but checkout is disabled.
+          {{ t('bookingPage.noAvailableSeatsBanner') }}
         </div>
 
         <SeatGrid
@@ -254,9 +271,9 @@ watch(showtimeId, async () => {
 
     <EmptyState
       v-else
-      title="This showtime is unavailable"
-      description="The selected session could not be prepared for booking. Return to movies and choose another showtime."
-      action-label="Back to movies"
+      :title="t('bookingPage.unavailableTitle')"
+      :description="t('bookingPage.bookingPreparationDescription')"
+      :action-label="t('bookingPage.backToMovies')"
       action-to="/movies"
     />
   </div>

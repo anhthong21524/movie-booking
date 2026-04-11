@@ -9,6 +9,8 @@ defineProps<{
 defineEmits<{
   toggle: [seatId: string]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -16,7 +18,7 @@ defineEmits<{
     <div
       class="mb-6 rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.3em] text-white/80"
     >
-      Screen
+      {{ t('bookingPage.screen') }}
     </div>
 
     <SeatLegend />

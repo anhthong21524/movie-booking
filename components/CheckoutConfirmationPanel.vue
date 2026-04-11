@@ -12,11 +12,13 @@ defineProps<{
 defineEmits<{
   confirm: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <aside class="card p-6">
-    <h2 class="text-xl font-bold text-slate-950">Confirmation</h2>
+    <h2 class="text-xl font-bold text-slate-950">{{ t('checkoutPage.confirmationTitle') }}</h2>
 
     <div class="mt-5 space-y-3">
       <div
@@ -31,7 +33,7 @@ defineEmits<{
 
     <div class="mt-5 border-t border-border pt-5">
       <div class="flex items-center justify-between gap-3">
-        <span class="text-sm text-slate-500">Total</span>
+        <span class="text-sm text-slate-500">{{ t('checkoutPage.total') }}</span>
         <span class="text-2xl font-bold text-slate-950">{{ summary.totalLabel }}</span>
       </div>
     </div>
@@ -57,15 +59,15 @@ defineEmits<{
     <div class="mt-6 space-y-3">
       <LoadingButton
         block
-        :label="submitState === 'success' ? 'Booking confirmed' : 'Confirm booking'"
+        :label="submitState === 'success' ? t('checkoutPage.bookingConfirmed') : t('checkoutPage.confirmBooking')"
         :loading="submitState === 'submitting'"
-        loading-label="Confirming booking..."
+        :loading-label="t('checkoutPage.confirmingBooking')"
         :disabled="confirmDisabled || submitState === 'success'"
         @click="$emit('confirm')"
       />
 
       <NuxtLink :to="backToSeatsTo" class="btn-secondary w-full text-center">
-        Back to seats
+        {{ t('checkoutPage.backToSeats') }}
       </NuxtLink>
     </div>
   </aside>
