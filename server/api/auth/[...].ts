@@ -122,10 +122,11 @@ const authOptions: AuthOptions = {
       user.name = oauthUser.name
       user.email = oauthUser.email
       user.role = oauthUser.role
+      user.accessToken = oauthUser.accessToken
 
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
         token.name = user.name
@@ -134,6 +135,26 @@ const authOptions: AuthOptions = {
         if (user.accessToken) {
           token.accessToken = user.accessToken
         }
+        token.hasApiAccess = Boolean(user.accessToken)
+      }
+
+      if (
+        account?.provider === 'google' &&
+        (typeof token.id !== 'string' || token.id.length === 0) &&
+        typeof token.email === 'string' &&
+        token.email.length > 0
+      ) {
+        const oauthUser = await findOrCreateOAuthUser({
+          email: token.email,
+          name: typeof token.name === 'string' ? token.name : null,
+        })
+
+        token.id = oauthUser.id
+        token.name = oauthUser.name
+        token.email = oauthUser.email
+        token.role = oauthUser.role
+        token.accessToken = oauthUser.accessToken
+        token.hasApiAccess = true
       }
 
       return token
@@ -151,6 +172,7 @@ const authOptions: AuthOptions = {
       session.user.name = String(token.name ?? '')
       session.user.email = String(token.email ?? '')
       session.user.role = (token.role as AuthRole | undefined) === 'ADMIN' ? 'ADMIN' : 'USER'
+      session.user.hasApiAccess = Boolean(token.accessToken ?? token.hasApiAccess)
 
       return session
     },

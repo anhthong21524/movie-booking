@@ -114,6 +114,10 @@ const handleContinueToCheckout = async () => {
     const draftBooking = await bookingStore.startBooking(
       showtime.value.id,
       localizedValidation.nextSelectedIds,
+      {
+        seats: localizedValidation.selectedSeats,
+        unitPrice: showtime.value.price,
+      },
     )
 
     await navigateTo(buildCheckoutRoute(draftBooking.id))

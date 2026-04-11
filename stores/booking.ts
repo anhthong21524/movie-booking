@@ -84,6 +84,14 @@ export const useBookingStore = defineStore('booking', () => {
 
   const totalAmount = computed(() => booking.value?.totalAmount ?? 0)
 
+  const hasApiAccess = () => {
+    const auth = useAuth()
+
+    return Boolean(
+      (auth.data.value?.user as { hasApiAccess?: boolean } | undefined)?.hasApiAccess,
+    )
+  }
+
   const persistBooking = () => {
     if (!import.meta.client) {
       return
@@ -113,15 +121,33 @@ export const useBookingStore = defineStore('booking', () => {
     )
   }
 
+  const hydrateBookingHistory = (force = false) => {
+    if (!import.meta.client) {
+      return
+    }
+
+    if (!force && bookingHistory.value.length) {
+      return
+    }
+
+    bookingHistory.value = parseStoredBookingHistory(
+      window.localStorage.getItem(BOOKING_HISTORY_STORAGE_KEY),
+    )
+  }
+
   const hydrateBooking = () => {
     if (!import.meta.client || hasHydrated.value) {
       return
     }
 
     booking.value = parseStoredBooking(window.localStorage.getItem(BOOKING_STORAGE_KEY))
-    bookingHistory.value = parseStoredBookingHistory(
-      window.localStorage.getItem(BOOKING_HISTORY_STORAGE_KEY),
-    )
+    hydrateBookingHistory(true)
+
+     if (!bookingHistory.value.length && booking.value?.status === 'CONFIRMED') {
+      bookingHistory.value = [booking.value]
+      persistBookingHistory()
+    }
+
     hasHydrated.value = true
   }
 
@@ -140,6 +166,18 @@ export const useBookingStore = defineStore('booking', () => {
   }
 
   const fetchBookingHistory = async () => {
+    hydrateBooking()
+    hydrateBookingHistory(true)
+
+    if (!bookingHistory.value.length && booking.value?.status === 'CONFIRMED') {
+      bookingHistory.value = [booking.value]
+      persistBookingHistory()
+    }
+
+    if (!hasApiAccess()) {
+      return bookingHistory.value
+    }
+
     try {
       const results = await apiService.request<Booking[]>('/api/v1/bookings')
       bookingHistory.value = results
@@ -149,7 +187,32 @@ export const useBookingStore = defineStore('booking', () => {
     }
   }
 
-  const startBooking = async (showtimeId: string, seatIds: string[]) => {
+  const startBooking = async (
+    showtimeId: string,
+    seatIds: string[],
+    options?: {
+      seats?: Seat[]
+      unitPrice?: number
+    },
+  ) => {
+    if (!hasApiAccess()) {
+      const unitPrice = typeof options?.unitPrice === 'number' ? options.unitPrice : 0
+      const selectedSeats = Array.isArray(options?.seats) ? options.seats : []
+      const draftBooking: Booking = {
+        id: `local-${Date.now()}`,
+        showtimeId,
+        seatIds: [...seatIds],
+        seats: selectedSeats,
+        unitPrice,
+        totalAmount: unitPrice * selectedSeats.length,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      }
+
+      replaceBooking(draftBooking)
+      return draftBooking
+    }
+
     const result = await apiService.request<Booking>('/api/v1/bookings', {
       method: 'POST',
       body: { showtimeId, seatIds },
@@ -228,6 +291,7 @@ export const useBookingStore = defineStore('booking', () => {
     hasHydrated,
     totalAmount,
     hydrateBooking,
+    hydrateBookingHistory,
     fetchBookingHistory,
     startBooking,
     setBooking,

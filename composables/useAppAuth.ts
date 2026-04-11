@@ -45,7 +45,15 @@ export const useAppAuth = () => {
 
   const ensureResolved = async () => {
     if (auth.status.value === 'loading') {
-      await auth.getSession()
+      for (let attempt = 0; attempt < 5 && auth.status.value === 'loading'; attempt += 1) {
+        await auth.getSession()
+
+        if (auth.status.value !== 'loading') {
+          break
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
     }
 
     return syncFromSource()

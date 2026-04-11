@@ -59,6 +59,15 @@ class ApiService {
       const normalizedError = normalizeApiError(error)
 
       if (import.meta.client && isAppError(normalizedError) && normalizedError.category === 'unauthorized') {
+        const auth = useAuth()
+        const hasApiAccess = Boolean(
+          (auth.data.value?.user as { hasApiAccess?: boolean } | undefined)?.hasApiAccess,
+        )
+
+        if (!hasApiAccess) {
+          throw normalizedError
+        }
+
         const appAuth = useAppAuth()
         void appAuth.handleExpiredSession()
       }
