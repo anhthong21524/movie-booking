@@ -38,15 +38,6 @@ const pageState = computed(() => {
 })
 
 const showtimesEmptyState = computed(() => getShowtimesEmptyState(locale.value))
-const dateGroupCountLabel = computed(() => {
-  if (pageState.value?.kind !== 'ready') {
-    return ''
-  }
-
-  return pageState.value.vm.showtimeGroups.length === 1
-    ? t('movieDetailPage.dateGroupSingular')
-    : t('movieDetailPage.dateGroupPlural')
-})
 const malformedShowtimeMessage = computed(() => {
   if (pageState.value?.kind !== 'ready' || !pageState.value.vm.malformedShowtimeCount) {
     return ''
@@ -165,19 +156,15 @@ watch(movieId, async () => {
       </section>
 
       <section class="space-y-5">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
           <div>
             <h2 class="text-2xl font-bold text-slate-950">
               {{ t('moviesPage.showtimesTitle') }}
             </h2>
-            <p class="mt-1 max-w-2xl text-slate-600">
+            <p class="mt-1 whitespace-nowrap text-slate-600">
               {{ t('movieDetailPage.showtimesIntro') }}
             </p>
           </div>
-          <p class="text-sm text-slate-500">
-            {{ pageState.vm.showtimeGroups.length }}
-            {{ dateGroupCountLabel }}
-          </p>
         </div>
 
         <div

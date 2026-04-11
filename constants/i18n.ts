@@ -468,7 +468,7 @@ export const messages = {
         'Một số dữ liệu bắt buộc của phim đang bị thiếu. Hãy làm mới trang hoặc quay lại danh sách phim.',
       bookingEntryTitle: 'Lối vào đặt vé',
       bookingEntryDescription:
-        'Hãy chọn một suất chiếu hợp lệ bên dưới để tiếp tục đến bước chọn ghế.',
+        'Vui lòng liên hệ nhân viên của rạp phim.',
       showtimesIntro:
         'Xem các suất chiếu sắp tới theo từng ngày. Những khung giờ bị vô hiệu hóa hiện không khả dụng hoặc không hợp lệ.',
       dateGroupSingular: 'nhóm ngày',

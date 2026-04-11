@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useBookingStore } from '~/stores/booking'
+import { formatCurrency } from '~/utils/format'
 
 definePageMeta({ middleware: 'auth', ssr: false })
 
@@ -32,7 +33,7 @@ const totalSpend = computed(() =>
 )
 
 const totalSpendLabel = computed(() =>
-  new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(totalSpend.value),
+  formatCurrency(totalSpend.value, 'USD', locale.value),
 )
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -193,18 +194,9 @@ const handleFileChange = async (event: Event) => {
         </div>
 
         <div class="card p-6">
-          <div class="flex items-center gap-4">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-            </span>
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.totalSpent') }}</p>
-              <p class="mt-1 text-2xl font-bold text-slate-950">{{ totalSpendLabel }}</p>
-              <p class="mt-0.5 text-xs text-slate-500">{{ t('profilePage.acrossConfirmedBookings') }}</p>
-            </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{{ t('profilePage.totalSpent') }}</p>
+            <p class="mt-1 text-2xl font-bold text-slate-950">{{ totalSpendLabel }}</p>
           </div>
         </div>
 
