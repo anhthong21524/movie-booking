@@ -9,6 +9,7 @@ const bookingStore = useBookingStore()
 const { locale, t } = useI18n()
 const route = useRoute()
 const { request } = useApi()
+const auth = useAuth()
 const { getMessage } = useApiError()
 
 const submitState = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
@@ -94,6 +95,10 @@ const confirmDisabled = computed(() => {
   return !summary.value || !booking.value || booking.value.status === 'CONFIRMED'
 })
 
+const hasApiAccess = computed(() =>
+  Boolean((auth.data.value?.user as { hasApiAccess?: boolean } | undefined)?.hasApiAccess),
+)
+
 watch(
   booking,
   (nextBooking) => {
@@ -126,6 +131,29 @@ const handleConfirmBooking = async () => {
   submitMessage.value = t('checkoutPage.confirmingMessage')
 
   try {
+    if (!hasApiAccess.value) {
+      const confirmedBooking = bookingStore.confirmBooking({
+        seats: booking.value.seats,
+        seatIds: booking.value.seatIds,
+        totalAmount: booking.value.totalAmount,
+        unitPrice: booking.value.unitPrice,
+      })
+
+      if (!confirmedBooking) {
+        throw new Error('Local booking confirmation failed.')
+      }
+
+      checkoutData.value = {
+        booking: confirmedBooking,
+        showtime: showtime.value,
+        movie: movie.value,
+      }
+
+      submitState.value = 'success'
+      submitMessage.value = t('checkoutPage.alreadyConfirmedMessage')
+      return
+    }
+
     const confirmedBooking = await request<Booking>(
       `/api/v1/bookings/${booking.value.id}/confirm`,
       {

@@ -9,6 +9,7 @@ declare module 'next-auth' {
       name: string
       email: string
       role: AuthRole
+      hasApiAccess?: boolean
     } & DefaultSession['user']
   }
 
@@ -18,6 +19,7 @@ declare module 'next-auth' {
     email: string
     role: AuthRole
     accessToken?: string
+    hasApiAccess?: boolean
   }
 }
 
@@ -28,5 +30,6 @@ declare module 'next-auth/jwt' {
     email?: string | null
     role?: AuthRole
     accessToken?: string
+    hasApiAccess?: boolean
   }
 }
