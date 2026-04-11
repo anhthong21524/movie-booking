@@ -5,6 +5,7 @@ import type {
   TicketHistoryState,
   TicketStatusVm,
 } from '~/types/tickets'
+import type { AppLocale } from '~/constants/i18n'
 import { formatCurrency, formatDateTime } from '~/utils/format'
 
 const statusOrder: Record<Booking['status'], number> = {
@@ -13,11 +14,37 @@ const statusOrder: Record<Booking['status'], number> = {
   CANCELLED: 2,
 }
 
-const normalizeTicketStatus = (status: Booking['status']): TicketStatusVm => {
+const getTicketsCopy = (locale: AppLocale) => {
+  if (locale === 'vi') {
+    return {
+      upcoming: 'Sắp tới',
+      cancelled: 'Đã hủy',
+      pending: 'Đang chờ',
+      movieUnavailable: 'Phim hiện không khả dụng',
+      qrLabel: 'Vùng mã QR',
+      qrHint: 'Mã QR của vé sẽ hiển thị tại đây khi tính năng giao và quét vé được triển khai.',
+    }
+  }
+
+  return {
+    upcoming: 'Upcoming',
+    cancelled: 'Cancelled',
+    pending: 'Pending',
+    movieUnavailable: 'Movie unavailable',
+    qrLabel: 'QR code placeholder',
+    qrHint: 'Ticket QR will appear here once delivery and scanning are implemented.',
+  }
+}
+
+const normalizeTicketStatus = (
+  status: Booking['status'],
+  locale: AppLocale,
+): TicketStatusVm => {
+  const copy = getTicketsCopy(locale)
   if (status === 'CONFIRMED') {
     return {
       code: 'upcoming',
-      label: 'Upcoming',
+      label: copy.upcoming,
       tone: 'emerald',
     }
   }
@@ -25,14 +52,14 @@ const normalizeTicketStatus = (status: Booking['status']): TicketStatusVm => {
   if (status === 'CANCELLED') {
     return {
       code: 'cancelled',
-      label: 'Cancelled',
+      label: copy.cancelled,
       tone: 'slate',
     }
   }
 
   return {
     code: 'pending',
-    label: 'Pending',
+    label: copy.pending,
     tone: 'amber',
   }
 }
@@ -80,12 +107,13 @@ const mapBookingToTicketCard = (
     return null
   }
 
-  const status = normalizeTicketStatus(booking.status)
+  const copy = getTicketsCopy(context.locale)
+  const status = normalizeTicketStatus(booking.status, context.locale)
 
   return {
     id: booking.id,
     referenceId: shortenBookingId(booking.id),
-    movieTitle: movie?.title ?? 'Movie unavailable',
+    movieTitle: movie?.title ?? copy.movieUnavailable,
     roomName: showtime.roomName,
     startsAtLabel: formatDateTime(showtime.startsAt, context.locale),
     bookedAtLabel: formatDateTime(
@@ -96,8 +124,8 @@ const mapBookingToTicketCard = (
     seatLabels,
     totalLabel: formatCurrency(booking.totalAmount, 'USD', context.locale),
     status,
-    qrPlaceholderLabel: 'QR code placeholder',
-    qrPlaceholderHint: 'Ticket QR will appear here once delivery and scanning are implemented.',
+    qrPlaceholderLabel: copy.qrLabel,
+    qrPlaceholderHint: copy.qrHint,
   }
 }
 

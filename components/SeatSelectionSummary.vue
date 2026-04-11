@@ -14,35 +14,37 @@ defineProps<{
 defineEmits<{
   continue: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <aside class="card p-6">
-    <h2 class="text-xl font-bold">Booking summary</h2>
+    <h2 class="text-xl font-bold">{{ t('bookingPage.summaryTitle') }}</h2>
 
     <dl class="mt-5 space-y-4 text-sm">
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Showtime</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.showtime') }}</dt>
         <dd class="text-right font-semibold">{{ roomName }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Starts</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.starts') }}</dt>
         <dd class="text-right font-semibold">{{ startsAtLabel }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Seat price</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.seatPrice') }}</dt>
         <dd class="text-right font-semibold">{{ unitPriceLabel }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Selected</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.selected') }}</dt>
         <dd class="text-right font-semibold">{{ summary.selectedCount }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Available now</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.availableNow') }}</dt>
         <dd class="text-right font-semibold">{{ summary.availableCount }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-slate-500">Unavailable</dt>
+        <dt class="text-slate-500">{{ t('bookingPage.unavailable') }}</dt>
         <dd class="text-right font-semibold">{{ summary.unavailableCount }}</dd>
       </div>
     </dl>
@@ -53,7 +55,7 @@ defineEmits<{
     </div>
 
     <div class="mt-5">
-      <p class="text-sm font-semibold text-slate-900">Selected seats</p>
+      <p class="text-sm font-semibold text-slate-900">{{ t('bookingPage.selectedSeats') }}</p>
       <div v-if="summary.selectedSeats.length" class="mt-3 flex flex-wrap gap-2">
         <span
           v-for="seat in summary.selectedSeats"
@@ -64,19 +66,19 @@ defineEmits<{
         </span>
       </div>
       <p v-else class="mt-3 text-sm text-slate-500">
-        Pick at least one available seat to continue.
+        {{ t('bookingPage.emptySelectedSeats') }}
       </p>
     </div>
 
     <div class="mt-6 flex items-center justify-between gap-3 border-t border-border pt-5">
       <div>
-        <p class="text-sm text-slate-500">Subtotal</p>
+        <p class="text-sm text-slate-500">{{ t('checkoutPage.total') }}</p>
         <p class="text-2xl font-bold text-slate-950">{{ summary.formattedSubtotal }}</p>
       </div>
       <LoadingButton
         :label="actionLabel"
         :loading="actionPending"
-        loading-label="Opening checkout..."
+        :loading-label="t('bookingPage.openingCheckout')"
         :disabled="actionDisabled"
         @click="$emit('continue')"
       />

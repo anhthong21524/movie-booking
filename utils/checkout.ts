@@ -9,6 +9,42 @@ import { formatCurrency, formatDateTime } from '~/utils/format'
 import { normalizeSeatRecords } from '~/utils/seat-selection'
 import type { RawSeatRecord } from '~/types/seat-selection'
 
+const getCheckoutCopy = (locale: AppLocale) => {
+  if (locale === 'vi') {
+    return {
+      selectedMovie: 'Phim đã chọn',
+      confirmed: 'Đã xác nhận',
+      pendingConfirmation: 'Chờ xác nhận',
+      seatSummary: (count: number) => `${count} ghế đã chọn`,
+      seats: 'Ghế',
+      seatPrice: 'Giá ghế',
+      subtotal: 'Tạm tính',
+      fees: 'Phí',
+      discounts: 'Giảm giá',
+      confirmedGuidance:
+        'Đơn đặt vé này đã được xác nhận. Hãy giữ trang này mở cho đến khi tính năng thanh toán và xuất vé được bổ sung.',
+      pendingGuidance:
+        'Hãy kiểm tra kỹ đơn đặt vé trước khi xác nhận. Tổng tiền được tính lại theo giá suất chiếu hiện tại và tình trạng ghế mới nhất.',
+    }
+  }
+
+  return {
+    selectedMovie: 'Selected movie',
+    confirmed: 'Confirmed',
+    pendingConfirmation: 'Pending confirmation',
+    seatSummary: (count: number) => `${count} seat${count === 1 ? '' : 's'} selected`,
+    seats: 'Seats',
+    seatPrice: 'Seat price',
+    subtotal: 'Subtotal',
+    fees: 'Fees',
+    discounts: 'Discounts',
+    confirmedGuidance:
+      'This booking has already been confirmed. Keep this page open until payment and ticket issuance are added.',
+    pendingGuidance:
+      'Review the booking carefully before confirming. Totals are recalculated from the active showtime price and current seat availability.',
+  }
+}
+
 export const calculateBookingPricing = (
   unitPrice: number,
   seatCount: number,
@@ -175,47 +211,49 @@ export const buildCheckoutSummaryVm = (params: {
   locale: AppLocale
 }): CheckoutSummaryVm => {
   const { booking, showtime, movie, selectedSeats, pricing, locale } = params
+  const copy = getCheckoutCopy(locale)
 
   return {
     bookingId: booking.id,
-    movieTitle: movie?.title ?? 'Selected movie',
+    movieTitle: movie?.title ?? copy.selectedMovie,
     roomName: showtime.roomName,
     startsAtLabel: formatDateTime(showtime.startsAt, locale),
-    bookingStatusLabel: booking.status === 'CONFIRMED' ? 'Confirmed' : 'Pending confirmation',
+    bookingStatusLabel:
+      booking.status === 'CONFIRMED' ? copy.confirmed : copy.pendingConfirmation,
     selectedSeats,
-    seatSummaryLabel: `${selectedSeats.length} seat${selectedSeats.length === 1 ? '' : 's'} selected`,
+    seatSummaryLabel: copy.seatSummary(selectedSeats.length),
     pricingItems: [
       {
         id: 'seat-count',
-        label: 'Seats',
+        label: copy.seats,
         value: `${pricing.seatCount}`,
       },
       {
         id: 'unit-price',
-        label: 'Seat price',
+        label: copy.seatPrice,
         value: formatCurrency(pricing.unitPrice, 'USD', locale),
       },
       {
         id: 'subtotal',
-        label: 'Subtotal',
+        label: copy.subtotal,
         value: formatCurrency(pricing.subtotal, 'USD', locale),
       },
       {
         id: 'fees',
-        label: 'Fees',
+        label: copy.fees,
         value: formatCurrency(pricing.feeAmount, 'USD', locale),
       },
       {
         id: 'discounts',
-        label: 'Discounts',
+        label: copy.discounts,
         value: formatCurrency(pricing.discountAmount, 'USD', locale),
       },
     ],
     totalLabel: formatCurrency(pricing.total, 'USD', locale),
     guidance:
       booking.status === 'CONFIRMED'
-        ? 'This booking has already been confirmed. Keep this page open until payment and ticket issuance are added.'
-        : 'Review the booking carefully before confirming. Totals are recalculated from the active showtime price and current seat availability.',
+        ? copy.confirmedGuidance
+        : copy.pendingGuidance,
     locale,
     movie,
     showtime,

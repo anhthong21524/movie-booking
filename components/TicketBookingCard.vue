@@ -4,6 +4,8 @@ import type { TicketBookingCardVm } from '~/types/tickets'
 defineProps<{
   booking: TicketBookingCardVm
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -23,7 +25,7 @@ defineProps<{
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0 flex-1">
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Movie ticket
+            {{ t('ticketsPage.movieTicket') }}
           </p>
           <h2 class="mt-1.5 truncate text-2xl font-bold text-slate-950">
             {{ booking.movieTitle }}
@@ -83,7 +85,7 @@ defineProps<{
             </span>
             <div class="min-w-0">
               <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Showtime
+                {{ t('ticketsPage.showtime') }}
               </p>
               <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">
                 {{ booking.startsAtLabel }}
@@ -110,7 +112,7 @@ defineProps<{
             </span>
             <div class="min-w-0">
               <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Booked
+                {{ t('ticketsPage.booked') }}
               </p>
               <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">
                 {{ booking.bookedAtLabel }}
@@ -120,7 +122,7 @@ defineProps<{
                   <line x1="12" y1="1" x2="12" y2="23" />
                   <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                 </svg>
-                Total {{ booking.totalLabel }}
+                {{ t('ticketsPage.total') }} {{ booking.totalLabel }}
               </p>
             </div>
           </div>
@@ -137,7 +139,7 @@ defineProps<{
             </span>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Seats · {{ booking.seatLabels.length }} reserved
+                {{ t('ticketsPage.seatsReserved').replace('{count}', String(booking.seatLabels.length)) }}
               </p>
               <div class="mt-2.5 flex flex-wrap gap-2">
                 <span
@@ -184,10 +186,10 @@ defineProps<{
 
           <div>
             <p class="text-xs font-semibold text-slate-700">
-              {{ booking.status.tone === 'slate' ? 'Cancelled' : 'Scan at entrance' }}
+              {{ booking.status.tone === 'slate' ? t('ticketsPage.cancelledStatus') : t('ticketsPage.scanAtEntrance') }}
             </p>
             <p class="mt-1 text-[10px] leading-4 text-slate-400">
-              {{ booking.status.tone === 'slate' ? 'Ticket no longer valid' : 'QR delivery coming soon' }}
+              {{ booking.status.tone === 'slate' ? t('ticketsPage.ticketNoLongerValid') : t('ticketsPage.qrComingSoon') }}
             </p>
           </div>
         </div>

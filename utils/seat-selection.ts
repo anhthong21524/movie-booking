@@ -12,6 +12,59 @@ import { formatCurrency } from '~/utils/format'
 
 export const DEFAULT_MAX_SELECTED_SEATS = 6
 
+const getSeatSelectionCopy = (locale: AppLocale, maxSelectableSeats: number) => {
+  if (locale === 'vi') {
+    return {
+      emptySelection: 'Hãy chọn ít nhất một ghế còn trống để tiếp tục.',
+      selectionLimit: `Bạn chỉ có thể chọn tối đa ${maxSelectableSeats} ghế trong một lần đặt vé.`,
+      selectedSeats: (count: number) =>
+        `${count} ghế đã được chọn.`,
+      stateSelected: 'Đã chọn',
+      stateBooked: 'Đã đặt',
+      stateUnavailable: 'Không khả dụng',
+      stateAvailable: 'Còn trống',
+      assistiveSelected: 'đã chọn',
+      assistiveBooked: 'đã được đặt',
+      assistiveHeld: 'tạm thời không khả dụng',
+      assistiveAvailable: 'còn trống',
+      seatNoLongerAvailable: 'Ghế này không còn khả dụng.',
+      seatAlreadyBooked: (label: string) => `${label} đã được đặt.`,
+      seatTemporarilyUnavailable: (label: string) =>
+        `${label} tạm thời không khả dụng.`,
+      seatRemoved: (label: string) => `Đã bỏ ${label} khỏi lựa chọn của bạn.`,
+      seatAdded: (label: string) => `Đã thêm ${label} vào lựa chọn của bạn.`,
+      guidance:
+        `Bạn có thể chọn tối đa ${maxSelectableSeats} ghế. Không thể chọn các ghế đã đặt hoặc không khả dụng.`,
+      noAvailableSeats: 'Hiện không có ghế trống cho suất chiếu này.',
+    }
+  }
+
+  return {
+    emptySelection: 'Select at least one available seat to continue.',
+    selectionLimit: `You can select up to ${maxSelectableSeats} seats in one booking.`,
+    selectedSeats: (count: number) =>
+      `${count} seat${count === 1 ? '' : 's'} selected.`,
+    stateSelected: 'Selected',
+    stateBooked: 'Booked',
+    stateUnavailable: 'Unavailable',
+    stateAvailable: 'Available',
+    assistiveSelected: 'selected',
+    assistiveBooked: 'booked',
+    assistiveHeld: 'temporarily unavailable',
+    assistiveAvailable: 'available',
+    seatNoLongerAvailable: 'This seat is no longer available.',
+    seatAlreadyBooked: (label: string) => `${label} has already been booked.`,
+    seatTemporarilyUnavailable: (label: string) =>
+      `${label} is temporarily unavailable.`,
+    seatRemoved: (label: string) => `${label} removed from your selection.`,
+    seatAdded: (label: string) => `${label} added to your selection.`,
+    guidance:
+      `Select up to ${maxSelectableSeats} seats. Booked and unavailable seats cannot be chosen.`,
+    noAvailableSeats:
+      'This session does not have any available seats right now.',
+  }
+}
+
 const isSeatStatus = (value: unknown): value is Seat['status'] => {
   return value === 'AVAILABLE' || value === 'HELD' || value === 'BOOKED'
 }
@@ -109,7 +162,9 @@ export const validateSeatSelection = (
   seats: readonly Seat[],
   selectedSeatIds: readonly string[],
   maxSelectableSeats = DEFAULT_MAX_SELECTED_SEATS,
+  locale: AppLocale = 'en',
 ): SeatSelectionValidation => {
+  const copy = getSeatSelectionCopy(locale, maxSelectableSeats)
   const seatMap = createSeatMap(seats)
   const sanitizedSelectedIds: string[] = []
 
@@ -140,7 +195,7 @@ export const validateSeatSelection = (
       nextSelectedIds,
       selectedSeats,
       code: 'empty',
-      message: 'Select at least one available seat to continue.',
+      message: copy.emptySelection,
     }
   }
 
@@ -150,7 +205,7 @@ export const validateSeatSelection = (
       nextSelectedIds,
       selectedSeats,
       code: 'selection-limit',
-      message: `You can select up to ${maxSelectableSeats} seats in one booking.`,
+      message: copy.selectionLimit,
     }
   }
 
@@ -159,14 +214,16 @@ export const validateSeatSelection = (
     nextSelectedIds,
     selectedSeats,
     code: 'ok',
-    message: `${selectedSeats.length} seat${selectedSeats.length === 1 ? '' : 's'} selected.`,
+    message: copy.selectedSeats(selectedSeats.length),
   }
 }
 
 export const buildSeatGridRows = (
   seats: readonly Seat[],
   selectedSeatIds: readonly string[],
+  locale: AppLocale = 'en',
 ): SeatGridRowVm[] => {
+  const copy = getSeatSelectionCopy(locale, DEFAULT_MAX_SELECTED_SEATS)
   const selectedSet = new Set(selectedSeatIds)
   const rows = new Map<string, SeatGridRowVm>()
 
@@ -196,20 +253,20 @@ export const buildSeatGridRows = (
       isDisabled: seat.status !== 'AVAILABLE',
       stateLabel:
         presentationState === 'selected'
-          ? 'Selected'
+          ? copy.stateSelected
           : presentationState === 'booked'
-            ? 'Booked'
+            ? copy.stateBooked
             : presentationState === 'held'
-              ? 'Unavailable'
-              : 'Available',
+              ? copy.stateUnavailable
+              : copy.stateAvailable,
       assistiveLabel: `${seat.label}, ${
         presentationState === 'selected'
-          ? 'selected'
+          ? copy.assistiveSelected
           : presentationState === 'booked'
-            ? 'booked'
+            ? copy.assistiveBooked
             : presentationState === 'held'
-              ? 'temporarily unavailable'
-              : 'available'
+              ? copy.assistiveHeld
+              : copy.assistiveAvailable
       }`,
     })
 
@@ -226,12 +283,15 @@ export const toggleSeatSelection = (
   selectedSeatIds: readonly string[],
   seatId: string,
   maxSelectableSeats = DEFAULT_MAX_SELECTED_SEATS,
+  locale: AppLocale = 'en',
 ): SeatToggleResult => {
+  const copy = getSeatSelectionCopy(locale, maxSelectableSeats)
   const seatMap = createSeatMap(seats)
   const currentSelection = validateSeatSelection(
     seats,
     selectedSeatIds,
     maxSelectableSeats,
+    locale,
   ).nextSelectedIds
   const seat = seatMap.get(seatId)
 
@@ -240,13 +300,14 @@ export const toggleSeatSelection = (
       seats,
       currentSelection,
       maxSelectableSeats,
+      locale,
     )
 
     return {
       changed: false,
       nextSelectedIds: validation.nextSelectedIds,
       validation,
-      message: 'This seat is no longer available.',
+      message: copy.seatNoLongerAvailable,
     }
   }
 
@@ -255,6 +316,7 @@ export const toggleSeatSelection = (
       seats,
       currentSelection,
       maxSelectableSeats,
+      locale,
     )
 
     return {
@@ -263,8 +325,8 @@ export const toggleSeatSelection = (
       validation,
       message:
         seat.status === 'BOOKED'
-          ? `${seat.label} has already been booked.`
-          : `${seat.label} is temporarily unavailable.`,
+          ? copy.seatAlreadyBooked(seat.label)
+          : copy.seatTemporarilyUnavailable(seat.label),
     }
   }
 
@@ -280,13 +342,14 @@ export const toggleSeatSelection = (
       seats,
       currentSelection,
       maxSelectableSeats,
+      locale,
     )
 
     return {
       changed: false,
       nextSelectedIds: validation.nextSelectedIds,
       validation,
-      message: `You can select up to ${maxSelectableSeats} seats in one booking.`,
+      message: copy.selectionLimit,
     }
   }
 
@@ -294,6 +357,7 @@ export const toggleSeatSelection = (
     seats,
     nextSelection,
     maxSelectableSeats,
+    locale,
   )
 
   return {
@@ -301,8 +365,8 @@ export const toggleSeatSelection = (
     nextSelectedIds: validation.nextSelectedIds,
     validation,
     message: currentSelection.includes(seatId)
-      ? `${seat.label} removed from your selection.`
-      : `${seat.label} added to your selection.`,
+      ? copy.seatRemoved(seat.label)
+      : copy.seatAdded(seat.label),
   }
 }
 
@@ -317,7 +381,9 @@ export const buildSeatSelectionSummary = (
     seats,
     selectedSeatIds,
     maxSelectableSeats,
+    locale,
   )
+  const copy = getSeatSelectionCopy(locale, maxSelectableSeats)
   const availableCount = seats.filter(
     (seat) => seat.status === 'AVAILABLE',
   ).length
@@ -338,10 +404,10 @@ export const buildSeatSelectionSummary = (
     subtotal,
     formattedSubtotal: formatCurrency(subtotal, 'USD', locale),
     canContinue: validation.valid,
-    guidance: `Select up to ${maxSelectableSeats} seats. Booked and unavailable seats cannot be chosen.`,
+    guidance: copy.guidance,
     statusMessage:
       availableCount === 0
-        ? 'This session does not have any available seats right now.'
+        ? copy.noAvailableSeats
         : validation.message,
   }
 }

@@ -2,18 +2,31 @@
 import type { Movie } from '~/types'
 import { buildMovieDetailRoute } from '~/utils/routes'
 
-defineProps<{
+const props = defineProps<{
   movie: Movie
 }>()
 
 const { t } = useI18n()
+
+const posterAlt = computed(() =>
+  t('adminMovieCard.posterAlt').replace('{title}', props.movie.title),
+)
 </script>
 
 <template>
   <article class="card overflow-hidden">
-    <div
-      class="h-44 bg-gradient-to-br from-primary-500 via-primary-400 to-accent-500"
-    />
+    <div class="relative h-44 overflow-hidden bg-slate-100">
+      <img
+        v-if="movie.posterUrl"
+        :src="movie.posterUrl"
+        :alt="posterAlt"
+        class="h-full w-full object-cover"
+      >
+      <div
+        v-else
+        class="h-full bg-gradient-to-br from-primary-500 via-primary-400 to-accent-500"
+      />
+    </div>
     <div class="space-y-3 p-5">
       <div class="flex items-start justify-between gap-3">
         <div>

@@ -59,6 +59,15 @@ const pageErrorMessage = computed(() =>
   pageError.value ? getMessage(pageError.value, 'page') : null,
 )
 const ticketsEmptyState = computed(() => getTicketsEmptyState(locale.value))
+const malformedDescription = computed(() =>
+  t('ticketsPage.hiddenDescription').replace(
+    '{count}',
+    String(ticketHistoryState.value?.kind === 'ready' ? ticketHistoryState.value.malformedCount : 0),
+  ),
+)
+const bookingCountLabel = computed(() =>
+  totalCount.value === 1 ? t('ticketsPage.bookingSingular') : t('ticketsPage.bookingPlural'),
+)
 
 const confirmedCount = computed(() => {
   if (ticketHistoryState.value?.kind !== 'ready') return 0
@@ -149,9 +158,9 @@ onMounted(async () => {
     <!-- All malformed -->
     <PageEmptyState
       v-else-if="ticketHistoryState?.kind === 'malformed'"
-      title="Booking history is temporarily unavailable"
-      description="All saved bookings were malformed or linked to invalid showtimes, so tickets could not be rendered safely."
-      action-label="Browse movies"
+      :title="t('ticketsPage.malformedTitle')"
+      :description="t('ticketsPage.malformedDescription')"
+      :action-label="t('ticketsPage.action')"
       action-to="/movies"
     />
 
@@ -178,7 +187,7 @@ onMounted(async () => {
           </span>
           <div>
             <p class="text-2xl font-bold text-slate-950">{{ totalCount }}</p>
-            <p class="text-xs font-medium text-slate-500">Total bookings</p>
+            <p class="text-xs font-medium text-slate-500">{{ t('ticketsPage.totalBookings') }}</p>
           </div>
         </div>
 
@@ -191,7 +200,7 @@ onMounted(async () => {
           </span>
           <div>
             <p class="text-2xl font-bold text-slate-950">{{ confirmedCount }}</p>
-            <p class="text-xs font-medium text-slate-500">Confirmed</p>
+            <p class="text-xs font-medium text-slate-500">{{ t('ticketsPage.confirmed') }}</p>
           </div>
         </div>
 
@@ -205,7 +214,7 @@ onMounted(async () => {
           </span>
           <div>
             <p class="text-2xl font-bold text-slate-950">{{ cancelledCount }}</p>
-            <p class="text-xs font-medium text-slate-500">Cancelled</p>
+            <p class="text-xs font-medium text-slate-500">{{ t('ticketsPage.cancelled') }}</p>
           </div>
         </div>
       </div>
@@ -213,18 +222,18 @@ onMounted(async () => {
       <!-- Malformed warning -->
       <SectionErrorState
         v-if="ticketHistoryState.malformedCount"
-        title="Some bookings were hidden"
-        :description="`${ticketHistoryState.malformedCount} malformed booking ${ticketHistoryState.malformedCount === 1 ? 'record was' : 'records were'} hidden because required ticket data was missing or invalid.`"
+        :title="t('ticketsPage.hiddenTitle')"
+        :description="malformedDescription"
         :show-retry="false"
       />
 
       <!-- List header -->
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold text-slate-950">
-          Your bookings
+          {{ t('ticketsPage.listTitle') }}
         </h2>
         <p class="text-sm text-slate-500">
-          {{ totalCount }} {{ totalCount === 1 ? 'booking' : 'bookings' }}
+          {{ totalCount }} {{ bookingCountLabel }}
         </p>
       </div>
 

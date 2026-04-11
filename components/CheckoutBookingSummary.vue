@@ -4,6 +4,8 @@ import type { CheckoutSummaryVm } from '~/types/checkout'
 defineProps<{
   summary: CheckoutSummaryVm
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -11,7 +13,7 @@ defineProps<{
     <div class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Booking summary
+          {{ t('checkoutPage.bookingSummary') }}
         </p>
         <h2 class="mt-2 text-2xl font-bold text-slate-950">
           {{ summary.movieTitle }}
@@ -25,7 +27,7 @@ defineProps<{
     <dl class="mt-6 grid gap-4 md:grid-cols-2">
       <div class="rounded-[1.5rem] border border-border bg-slate-50 p-4">
         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Room
+          {{ t('checkoutPage.room') }}
         </dt>
         <dd class="mt-2 text-lg font-semibold text-slate-950">
           {{ summary.roomName }}
@@ -33,7 +35,7 @@ defineProps<{
       </div>
       <div class="rounded-[1.5rem] border border-border bg-slate-50 p-4">
         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Starts
+          {{ t('checkoutPage.starts') }}
         </dt>
         <dd class="mt-2 text-lg font-semibold text-slate-950">
           {{ summary.startsAtLabel }}
@@ -41,7 +43,7 @@ defineProps<{
       </div>
       <div class="rounded-[1.5rem] border border-border bg-slate-50 p-4 md:col-span-2">
         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Selected seats
+          {{ t('checkoutPage.selectedSeats') }}
         </dt>
         <dd class="mt-2">
           <p class="text-sm font-semibold text-slate-700">{{ summary.seatSummaryLabel }}</p>
