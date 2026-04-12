@@ -1,8 +1,9 @@
 export const AUTH_PASSWORD_MIN_LENGTH = 8
-export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8
+export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24
 export const AUTH_SESSION_UPDATE_AGE_SECONDS = 60 * 60
 export const AUTH_SESSION_REFRESH_INTERVAL_MS = 5 * 60 * 1000
 export const AUTH_SESSION_EXPIRY_SKEW_MS = 5 * 1000
+export const AUTH_ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 5 * 60
 
 export const AUTH_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const AUTH_PASSWORD_LETTER_PATTERN = /[A-Za-z]/

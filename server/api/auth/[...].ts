@@ -3,6 +3,7 @@ import CredentialsProviderModule from 'next-auth/providers/credentials'
 import GoogleProviderModule from 'next-auth/providers/google'
 import { NuxtAuthHandler } from '#auth'
 import {
+  AUTH_ACCESS_TOKEN_REFRESH_BUFFER_SECONDS,
   AUTH_SESSION_MAX_AGE_SECONDS,
   AUTH_SESSION_UPDATE_AGE_SECONDS,
   DEFAULT_PUBLIC_REDIRECT,
@@ -11,6 +12,7 @@ import type { AuthRole, CredentialsSignInBody } from '~/types/auth'
 import {
   authenticateUser,
   findOrCreateOAuthUser,
+  refreshAccessToken,
 } from '~/server/utils/auth-users'
 
 const CredentialsProvider = (
@@ -135,6 +137,12 @@ const authOptions: AuthOptions = {
         if (user.accessToken) {
           token.accessToken = user.accessToken
         }
+        if (user.refreshToken) {
+          token.refreshToken = user.refreshToken
+        }
+        if (user.accessTokenExpiresAt) {
+          token.accessTokenExpiresAt = user.accessTokenExpiresAt
+        }
         token.hasApiAccess = Boolean(user.accessToken)
       }
 
@@ -154,7 +162,25 @@ const authOptions: AuthOptions = {
         token.email = oauthUser.email
         token.role = oauthUser.role
         token.accessToken = oauthUser.accessToken
+        token.refreshToken = oauthUser.refreshToken
+        token.accessTokenExpiresAt = oauthUser.accessTokenExpiresAt
         token.hasApiAccess = true
+      }
+
+      // Proactively refresh the backend access token before it expires
+      if (
+        token.refreshToken &&
+        typeof token.accessTokenExpiresAt === 'number' &&
+        Date.now() / 1000 > token.accessTokenExpiresAt - AUTH_ACCESS_TOKEN_REFRESH_BUFFER_SECONDS
+      ) {
+        const refreshed = await refreshAccessToken(token.refreshToken)
+        if (refreshed) {
+          token.accessToken = refreshed.accessToken
+          token.refreshToken = refreshed.refreshToken
+          token.accessTokenExpiresAt = refreshed.accessTokenExpiresAt
+        } else {
+          token.error = 'RefreshAccessTokenError'
+        }
       }
 
       return token

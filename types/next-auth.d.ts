@@ -19,6 +19,8 @@ declare module 'next-auth' {
     email: string
     role: AuthRole
     accessToken?: string
+    refreshToken?: string
+    accessTokenExpiresAt?: number
     hasApiAccess?: boolean
   }
 }
@@ -30,6 +32,9 @@ declare module 'next-auth/jwt' {
     email?: string | null
     role?: AuthRole
     accessToken?: string
+    refreshToken?: string
+    accessTokenExpiresAt?: number
     hasApiAccess?: boolean
+    error?: string
   }
 }
