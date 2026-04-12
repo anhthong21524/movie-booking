@@ -1,6 +1,6 @@
 # MovieHub User Guide
 
-This guide explains how to use the current MovieHub web application, including customer features and admin features.
+MovieHub is a Nuxt 3 movie ticket booking web application for customers and admins. Customers can browse movies, review showtimes, select seats, confirm bookings, and check ticket history, while admins can manage movies and schedule showtimes.
 
 ## Access the App
 
